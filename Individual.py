@@ -97,6 +97,11 @@ class Diploid(object):
           genotype += loci
       return genotype      
                   
+    #TODO (zifanxiang): Is this really necessary? Can easily just call the getParentAtLocation function and manually compare
+    def isParentNameAtLoc(self, loc, chromNumber):
+        
+        return true;
+    
                 
         
 class Haploid(object):

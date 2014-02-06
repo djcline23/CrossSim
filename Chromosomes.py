@@ -54,6 +54,74 @@ class Chromosome(object):
           return not equal_result
       return NotImplemented
     
+    @staticmethod 
+    def getGeneticDistance(physLoc, number):
+        """Gets the centimorgan location from a physical location in kilobases"""
+        chromosome_max = [15072, 15279, 13784, 17494, 20920, 17719];
+        
+        if physLoc > chromosome_max[number] or physLoc < 0:
+            raise ValueError, "Physical location must be within the range of the chromosome"
+        
+        chromosome_breaks = [(527, 0), (3331, 3.43), (7182, 1.34), (3835, 6.78), (197, 0),
+                             (306, 0), (4573, 4.92), (7141, 1.33), (2589, 8.47), (670, 0),
+                             (494, 0), (3228, 7.83), (6618, 1.17), (2877, 7.24), (567, 0),
+                             (720, 0), (3176, 7.65), (9074, 1.05), (3742, 3.64), (782, 0),
+                             (643, 0), (5254, 3.22), (10653, 1.32), (3787, 5.47), (583, 0),
+                             (572, 0), (5565, 3.81), (6343, 1.70), (3937, 5.14), (1302, 0)]
+        genLoc = 0
+        i = 0
+        kb = physLoc
+        
+        while kb > 0:
+            kb -= chromosome_breaks[(number * 5) + i][0]
+            seg = chromosome_breaks[(number * 5) + i][0]
+           
+            if kb < 0:
+                seg += kb
+                
+            genLoc += (seg/1000) * chromosome_breaks[(number * 5) + i][1]
+            i+=1
+        return genLoc
+    
+    @staticmethod
+    def getPhysDistance(cM, number):
+        """Gets the physical location in kilobases from the given centimorgan location"""
+        cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
+        kb_shifts = [527, 306, 494, 720, 643, 572]
+        
+        if cM > cM_max[number] or cM < 0:
+            raise ValueError, "The centimorgan distance must be within the range of the chromosome"
+        
+        cM_breaks = [(11.42533, .29154), (9.62388, .74626), (26.0013, .14749),
+                     (22.49916, .20325), (9.49753, .75187), (21.92883, .11806),
+                     (25.27524, .12771), (7.74306, .8547), (20.82948, .13812),
+                     (24.2964, .13072), (9.5277, .95238), (13.62088, .27472),
+                     (16.91788, .31055), (14.06196, .75757), (20.71489, .18281),
+                     (21.20265, .26246), (10.7831, .58823), (20.23618, .19455)]
+        physLoc = kb_shifts[number]
+        i = 0
+        gen = cM
+        while gen > 0:
+            gen -= cM_breaks[(number * 3) + i][0]
+            seg = cM_breaks[(number * 3) + i][0]
+        
+            if gen < 0:
+                seg += gen
+        
+            physLoc += (seg * cM_breaks[(number * 3) + i][1])*1000
+            i += 1
+        
+        return physLoc
+    
+    @staticmethod
+    def getPhysDistanceFromLoc(loc, number):
+        """Gets a physical location from a [0,1] location"""
+        if loc > 1 or loc < 0:
+            raise ValueError, "The location must be within the range [0,1]"
+        
+        cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
+        return Chromosome.getPhysDistance(loc * cM_max[number], number)
+    
     def getParentAtLocation(self, loc):
         """gets the Parental Identity for a chromosomal location"""
         if loc < 0 or loc > 1:
@@ -166,10 +234,16 @@ class Chromosome(object):
 
         
 if __name__ == '__main__':
-    a = Chromosome(newParent = "Blue")
-    b = Chromosome(segments = [(0,1)])
-    newChrs = a.recombine(b)
-    print newChrs[0].segments
-    newChrs = newChrs[0].recombine(newChrs[1])
-    print newChrs[0].segments
-    print newChrs[0].getParentAtLocation(0.5)
+    x = Chromosome.getGeneticDistance(1000, 0)
+    print(x)
+    y = Chromosome.getPhysDistance(x, 0)
+    print(y)
+    z = Chromosome.getPhysDistanceFromLoc(.5, 1)
+    print(z)
+    #a = Chromosome(newParent = "Blue")
+    #b = Chromosome(segments = [(0,1)])
+    #newChrs = a.recombine(b)
+    #print newChrs[0].segments
+    #newChrs = newChrs[0].recombine(newChrs[1])
+    #print newChrs[0].segments
+    #print newChrs[0].getParentAtLocation(0.5)
