@@ -100,10 +100,18 @@ class Diploid(object):
     #TODO (zifanxiang): Is this really necessary? Can easily just call the getParentAtLocation function and manually compare
     def isParentNameAtLoc(self, loc, chromNumber):
         
-        return true;
+        return True;
     
-                
+    def getPercentageOfGenome(self, parentName):
+        totalPercentage = 0
         
+        for i in range(len(self.chromosome_set)):
+            for j in range(self.nChr):
+                totalPercentage += self.chromosome_set[i][j].getPercentageOfParent(parentName)
+               
+        
+        return totalPercentage / (len(self.chromosome_set) * self.nChr)   
+
 class Haploid(object):
     """Haploid individual, monoecious"""
     def __init__(self, name = None, chromosomes = None, newChr = None, cM = 200, chrNames = None):
@@ -152,3 +160,4 @@ if __name__ == '__main__':
         print "Chr %s: %s" % (chr.name, chr.segments)
         
     print F2s[0].getAllGenos(interval = 50, reference = "A")
+    print F2s[0].getPercentageOfGenome(parentName = "A")

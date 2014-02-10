@@ -231,19 +231,38 @@ class Chromosome(object):
             return (Chromosome(name = self.name, cM = self.cM,  segments = chr2), 
                     Chromosome(name = self.name, cM = self.cM,  segments = chr1))            
 
+    def getPercentageOfParent(self, parentName):
+        seg = list(self.segments)
+        i = 1
+        percent = 0
+        
+        while (i < len(seg)):
+            curParent = seg[i - 1][1]
+            if curParent == parentName:
+                percent += seg[i][0] - seg[i - 1][0]
+            
+            i += 1
+
+        if seg[i - 1][1] == parentName:
+            percent += 1 - seg[i - 1][0]
+        
+        return percent
 
         
 if __name__ == '__main__':
-    x = Chromosome.getGeneticDistance(1000, 0)
-    print(x)
-    y = Chromosome.getPhysDistance(x, 0)
-    print(y)
-    z = Chromosome.getPhysDistanceFromLoc(.5, 1)
-    print(z)
-    #a = Chromosome(newParent = "Blue")
-    #b = Chromosome(segments = [(0,1)])
-    #newChrs = a.recombine(b)
+    #x = Chromosome.getGeneticDistance(1000, 0)
+    #print(x)
+    #y = Chromosome.getPhysDistance(x, 0)
+    #print(y)
+    #z = Chromosome.getPhysDistanceFromLoc(.5, 1)
+    #print(z)
+    a = Chromosome(newParent = "Blue")
+    b = Chromosome(segments = [(0,1)])
+    newChrs = a.recombine(b)
     #print newChrs[0].segments
-    #newChrs = newChrs[0].recombine(newChrs[1])
+    newChrs = newChrs[0].recombine(newChrs[1])
+    #print newChrs[0].segments
+    print newChrs[0].getPercentageOfParent("Blue")
+    #print (list(newChrs[0].segments))
     #print newChrs[0].segments
     #print newChrs[0].getParentAtLocation(0.5)
