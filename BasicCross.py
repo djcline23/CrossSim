@@ -14,7 +14,22 @@ import operator
 import itertools
 from numpy import *
 
+"""The following four arrays contain the cross configuration parameters for each back cross"""
+numCrosses = range(2, 15, 1)
+numIndividuals = range(4, 2, 20)
+physLocs = []
+chromNumbers = range(0, 5, 1)
+
+def setUpPhysLocs():
+    i = 0
+    
+    for cM in Chromosome.cM_max:
+        for j in range(10, 1, -1):
+            physLocs[i][10 - j] = cM / j
+    
+    
 def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
+    """Crosses each worm in set A with worm B until the limit number of offspring that keep the parent segment at the desired location has been met"""
     generation = []
     loc = Chromosome.getLoc(physLoc, chromNumber)
     
@@ -31,6 +46,7 @@ def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
     return generation
 
 def backCrossTillLimitDiploid(diploidASet, diploidB, physLoc, chromNumber, parent, limit):
+    """Crosses each worm in set A with worm B until the limit number of offspring that keep the parent segment at the desired location has been met"""
     generation = []
     loc = Chromosome.getLoc(physLoc, chromNumber)
     
@@ -59,34 +75,28 @@ def roundRobinCrossTillLimitDiploid(diploidSet, physLoc, chromNumber, parent, li
     return generation
 
 if __name__ == '__main__':
-  #A = [ Worm(name="A", sex="hermaphrodite") ]
-  #B = Worm(name="B", sex="male")
-  Aparent = [ Diploid(name = "A", newChr = 6) ]
-  Bparent = Diploid(name = "B", newChr = 6)
-  #targetName = A[0].name
-  targetNameDip = Aparent[0].name
-  print(targetNameDip)
-  loc = Chromosome.getLoc(6500, 2)
-  print(loc);
-  #for i in range(50):
-    #A = backCrossTillLimit(A, B, 8000, 0, targetName, 20)
-
-  for i in range(75):
-    Aparent = backCrossTillLimitDiploid(Aparent, Bparent, 6500, 2, targetNameDip, 20)
-    
-  for i in range(10):
-    Aparent = roundRobinCrossTillLimitDiploid(Aparent, 6500, 2, targetNameDip, 20)
-    
-  for diploid in Aparent:
-    i = 1
-    for chrSet in diploid.chromosome_set:
-        print "Set %d Chr 2: %s" % (i, chrSet[1].segments)
-        print "Set %d Chr 3: %s" % (i, chrSet[2].segments)
-        i += 1
   
-  #for worm in A:
-  #  i = 1
-  #  for chrSet in worm.chromosome_set:
-  #          print "Set %d Chr 1: %s" % (i, chrSet[0].segments)
-  #          i += 1
-        
+  for crossNumber in numCrosses:
+    for indNumber in numIndividuals:
+        for physLoc in physLocs:
+            for chromNumber in chromNumbers:
+                Aparent = [ Diploid(name = "A", newChr = 6) ]
+                Bparent = Diploid(name = "B", newChr = 6)
+                targetNameDip = Aparent[0].name
+
+                for i in range(crossNumber):
+                    Aparent = backCrossTillLimitDiploid(Aparent, Bparent, physLoc, chromNumber, targetNameDip, numIndividuals)
+    
+                fileName = "%d_%d_%d_%d_crossConfig", (crossNumber, indNumber, physLoc, chromNumber)
+                f = open('')
+                for diploid in Aparent:
+                    i = 1
+                    for chrSet in diploid.chromosome_set:
+                        print "Set %d Chr 1: %s" % (i, chrSet[0].segments)
+                        print "Set %d Chr 2: %s" % (i, chrSet[1].segments)
+                        print "Set %d Chr 3: %s" % (i, chrSet[2].segments)
+                        print "Set %d Chr 4: %s" % (i, chrSet[3].segments)
+                        print "Set %d Chr 5: %s" % (i, chrSet[4].segments)
+                        print "Set %d Chr 6: %s" % (i, chrSet[5].segments)
+                        i += 1
+  

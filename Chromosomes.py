@@ -12,6 +12,8 @@ import operator
 
 from numpy import *
 
+chromosome_phys_max = [15072, 15279, 13784, 17494, 20920, 17719];
+cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
 
 def generateBreaksPoisson(cM = 200):
     breaks = random.uniform(size = random.poisson(cM/100.0))
@@ -57,9 +59,8 @@ class Chromosome(object):
     @staticmethod 
     def getGeneticDistance(physLoc, number):
         """Gets the centimorgan location from a physical location in kilobases"""
-        chromosome_max = [15072, 15279, 13784, 17494, 20920, 17719];
         
-        if physLoc > chromosome_max[number] or physLoc < 0:
+        if physLoc > chromosome_phys_max[number] or physLoc < 0:
             raise ValueError, "Physical location must be within the range of the chromosome"
         
         chromosome_breaks = [(527, 0), (3331, 3.43), (7182, 1.34), (3835, 6.78), (197, 0),
@@ -85,7 +86,6 @@ class Chromosome(object):
     
     @staticmethod
     def getLoc(physLoc, number):
-        cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
         genLoc = Chromosome.getGeneticDistance(physLoc, number)
         
         return genLoc / cM_max[number]
@@ -93,7 +93,6 @@ class Chromosome(object):
     @staticmethod
     def getPhysDistance(cM, number):
         """Gets the physical location in kilobases from the given centimorgan location"""
-        cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
         kb_shifts = [527, 306, 494, 720, 643, 572]
         
         if cM > cM_max[number] or cM < 0:
@@ -126,7 +125,6 @@ class Chromosome(object):
         if loc > 1 or loc < 0:
             raise ValueError, "The location must be within the range [0,1]"
         
-        cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
         return Chromosome.getPhysDistance(loc * cM_max[number], number)
     
     def getParentAtLocation(self, loc):
