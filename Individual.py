@@ -149,15 +149,21 @@ if __name__ == '__main__':
     F2s = F1s[0].mate(F1s[1], nOffspring = 4)
     
     print "Offspring Chromosomes:"
-    print "F1 Ind 1: %s" % F1s[0].name 
-    for chr in F1s[0].chromosome_set[0]:
+    #print "F1 Ind 1: %s" % F1s[0].name 
+    #for chr in F1s[0].chromosome_set[0]:
+    #    print "Chr %s: %s" % (chr.name, chr.segments)
+    #print("Chromsome set 2")
+    #for chr in F1s[0].chromosome_set[1]:
+    #    print "Chr %s: %s" % (chr.name, chr.segments)    
+    #print "F2 Ind 2"
+    #for chr in F1s[1].chromosome_set[1]:
+    #    print "Chr %s: %s" % (chr.name, chr.segments)
+    print "Set 1"
+    for chr in F2s[1].chromosome_set[0]:
         print "Chr %s: %s" % (chr.name, chr.segments)
-    print "F2 Ind 2"
-    for chr in F1s[1].chromosome_set[1]:
-        print "Chr %s: %s" % (chr.name, chr.segments)
-        
+    print "Set 2"
     for chr in F2s[1].chromosome_set[1]:
         print "Chr %s: %s" % (chr.name, chr.segments)
-        
-    print F2s[0].getAllGenos(interval = 50, reference = "A")
+    
+    #print F2s[0].getAllGenos(interval = 50, reference = "A")
     print F2s[0].getPercentageOfGenome(parentName = "A")

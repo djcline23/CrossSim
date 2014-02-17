@@ -84,6 +84,13 @@ class Chromosome(object):
         return genLoc
     
     @staticmethod
+    def getLoc(physLoc, number):
+        cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
+        genLoc = Chromosome.getGeneticDistance(physLoc, number)
+        
+        return genLoc / cM_max[number]
+    
+    @staticmethod
     def getPhysDistance(cM, number):
         """Gets the physical location in kilobases from the given centimorgan location"""
         cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
@@ -252,7 +259,7 @@ class Chromosome(object):
 if __name__ == '__main__':
     #x = Chromosome.getGeneticDistance(1000, 0)
     #print(x)
-    #y = Chromosome.getPhysDistance(x, 0)
+    y = Chromosome.getPhysDistance
     #print(y)
     #z = Chromosome.getPhysDistanceFromLoc(.5, 1)
     #print(z)
@@ -261,8 +268,10 @@ if __name__ == '__main__':
     newChrs = a.recombine(b)
     #print newChrs[0].segments
     newChrs = newChrs[0].recombine(newChrs[1])
+    print "Chromosome Set 1: ", (newChrs[0].segments)
+    print "Chromosome Set 2: ", (newChrs[1].segments)
     #print newChrs[0].segments
-    print newChrs[0].getPercentageOfParent("Blue")
+    #print newChrs[0].getPercentageOfParent("Blue")
     #print (list(newChrs[0].segments))
     #print newChrs[0].segments
     #print newChrs[0].getParentAtLocation(0.5)
