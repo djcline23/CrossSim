@@ -129,7 +129,7 @@ class Chromosome(object):
     
     def getParentAtLocation(self, loc):
         """gets the Parental Identity for a chromosomal location"""
-        if loc < 0 or loc > 1:
+        if loc < 0 or loc > 1.01:
             raise ValueError, "Location must be in range [0,1]"
             
         i = 0

@@ -97,11 +97,8 @@ class Diploid(object):
           genotype += loci
       return genotype      
                   
-    #TODO (zifanxiang): Is this really necessary? Can easily just call the getParentAtLocation function and manually compare
-    def isParentNameAtLoc(self, loc, chromNumber):
-        
-        return True;
     
+    #TODO(zifanxiang): refactor to use the getPercentage of selected chromosome method
     def getPercentageOfGenome(self, parentName):
         totalPercentage = 0
         
