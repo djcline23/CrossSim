@@ -92,15 +92,10 @@ def averagePercentages(diploidSet, targetChrom, targetName):
 
 if __name__ == '__main__':
   setUpPhysLocs();
-  g = open('General_statisics', 'w')
-  g.write('{:<30}'.format('Number of Back Crosses'))
-  g.write('{:<35}'.format('Number of Individuals'))
-  g.write('{:<40}'.format('Selected Chromosome'))
-  g.write('{:<26}'.format('Selected Base Pair'))
-  g.write('{:<40}'.format('Percent Selected Chromosome'))
-  g.write('{:<26}'.format('Percent Genome'))
-  g.write('\n')
-
+  g = open('general_statisics.csv', 'wb')
+  g.write('Number of Back Crosses,Number of Individuals,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome\n')
+  physIntervals = []
+  
   for crossNumber in numCrosses:
     for indNumber in numIndividuals:
         i = 0
@@ -109,13 +104,16 @@ if __name__ == '__main__':
                 Aparent = [ Diploid(name = "A", newChr = 6) ]
                 Bparent = Diploid(name = "B", newChr = 6)
                 targetNameDip = Aparent[0].name
+                physLoc = physLocs[(i * 10) + j]
+                genLoc = Chromosome.getLoc(physLoc, chromNumber)
 
                 for k in range(crossNumber):
-                    Aparent = backCrossTillLimitDiploid(Aparent, Bparent, physLocs[(i * 10) + j], chromNumber, targetNameDip, indNumber)
+                    Aparent = backCrossTillLimitDiploid(Aparent, Bparent, physLoc, chromNumber, targetNameDip, indNumber)
     
+                print "chrome number: %d" % chromNumber
                 # Format of the output files is as follows: Number of Crosses_ Number Of Individuals per Cross _ Target Chromosome _ Physical Location on the Target Chromosome
-                fileName = "%d_%d_%d_%d_crossConfig" % (crossNumber, indNumber, chromNumber + 1, physLocs[(i * 10) + j])
-                f = open(fileName, 'w')
+                fileName = "%d_%d_%d_%d_crossConfig.csv" % (crossNumber, indNumber, chromNumber + 1, physLoc)
+                f = open(fileName, 'wb')
                 t = 1 #Counter for the different individuals that have to printed within each cross 
                 for diploid in Aparent:
                     l = 1 #Counter for the two sets of chromosomes
@@ -127,6 +125,10 @@ if __name__ == '__main__':
                         f.write("Set %d Chr 4: %s\n" % (l, chrSet[3].segments))
                         f.write("Set %d Chr 5: %s\n" % (l, chrSet[4].segments))
                         f.write("Set %d Chr 6: %s\n" % (l, chrSet[5].segments))
+                        
+                        if chrSet[chromNumber].getParentAtLocation(genLoc) == targetNameDip:
+                            physIntervals.append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
+                            
                         l += 1
                     
                     t = t + 1
@@ -135,14 +137,9 @@ if __name__ == '__main__':
                 hold = averagePercentages(Aparent, chromNumber, targetNameDip)
                 averageTarget = hold[0]
                 averageGenome = hold[1]
-                g.write('{:<38}'.format('%d' % crossNumber))
-                g.write('{:<35}'.format('%d' % indNumber))
-                g.write('{:<40}'.format('%d' % (chromNumber + 1)))
-                g.write('{:<26}'.format('%d' % physLocs[(i * 10) + j]))
-                g.write('{:<35}'.format('%f' % averageTarget))
-                g.write('{:<26}'.format('%f' % averageGenome))
-                g.write('\n')
+                g.write('%d,%d,%d,%d,%f,%f\n' % (crossNumber, indNumber, chromNumber + 1, physLocs[(i * 10) + j], averageTarget, averageGenome))
 
             i = i + 1
   
   g.close()
+  print(physIntervals)

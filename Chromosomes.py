@@ -93,7 +93,8 @@ class Chromosome(object):
     @staticmethod
     def getPhysDistance(cM, number):
         """Gets the physical location in kilobases from the given centimorgan location"""
-        kb_shifts = [527, 306, 494, 720, 643, 572]
+        kb_shifts_left = [527, 306, 494, 720, 643, 572]
+        kb_shifts_right = [197, 670, 567, 782, 583, 1302]
         
         if cM > cM_max[number] or cM < 0:
             raise ValueError, "The centimorgan distance must be within the range of the chromosome"
@@ -104,10 +105,11 @@ class Chromosome(object):
                      (24.2964, .13072), (9.5277, .95238), (13.62088, .27472),
                      (16.91788, .31055), (14.06196, .75757), (20.71489, .18281),
                      (21.20265, .26246), (10.7831, .58823), (20.23618, .19455)]
-        physLoc = kb_shifts[number]
+        physLoc = kb_shifts_left[number]
         i = 0
         gen = cM
-        while gen > 0:
+        while gen > 0.001:
+            print "i: %d" % i
             gen -= cM_breaks[(number * 3) + i][0]
             seg = cM_breaks[(number * 3) + i][0]
         
@@ -117,6 +119,9 @@ class Chromosome(object):
             physLoc += (seg * cM_breaks[(number * 3) + i][1])*1000
             i += 1
         
+        if cM == cM_max[number]:
+            physLoc += kb_shifts_right[number]
+            
         return physLoc
     
     @staticmethod
@@ -252,22 +257,48 @@ class Chromosome(object):
             percent += 1 - seg[i - 1][0]
         
         return percent
-
+    
+    def physicalLocsOfInterval(self, genLoc, chromNumber):
+        seg = list(self.segments)
+        i = 0
+        
+        while (i < len(seg) and seg[i][0] < genLoc):
+            i += 1
+    
+        lowerBound = 0
+        upperBound = 1
+        
+        if (i < len(seg)):
+            upperBound = seg[i][0]
+        if (i > 0):
+            lowerBound = seg[i - 1][0]
+        else:
+            upperBound = seg[i + 1][0]
+        
+        return [int(Chromosome.getPhysDistanceFromLoc(lowerBound, chromNumber)), int(Chromosome.getPhysDistanceFromLoc(upperBound, chromNumber))]
         
 if __name__ == '__main__':
-    #x = Chromosome.getGeneticDistance(1000, 0)
+    #x = Chromosome.getLoc(15072, 0)
     #print(x)
-    y = Chromosome.getPhysDistance
+    #y = Chromosome.getPhysDistanceFromLoc(x, 0)
     #print(y)
     #z = Chromosome.getPhysDistanceFromLoc(.5, 1)
     #print(z)
-    a = Chromosome(newParent = "Blue")
-    b = Chromosome(segments = [(0,1)])
-    newChrs = a.recombine(b)
+    u = Chromosome.getPhysDistance(47.0507, 0)
+    print(u)
+    #a = Chromosome(newParent = "Blue")
+    #b = Chromosome(segments = [(0,1)])
+    #newChrs = a.recombine(b)
     #print newChrs[0].segments
-    newChrs = newChrs[0].recombine(newChrs[1])
-    print "Chromosome Set 1: ", (newChrs[0].segments)
-    print "Chromosome Set 2: ", (newChrs[1].segments)
+    #newChrs = newChrs[0].recombine(newChrs[1])
+    #k = newChrs[0].physicalLocsOfInterval(0, 0)
+    #k2 = newChrs[0].physicalLocsOfInterval(.6, 0)
+    #k3 = newChrs[0].physicalLocsOfInterval(.8, 0)
+    #print "Chromosome Set 1: ", (newChrs[0].segments)
+    #print "Chromosome Set 2: ", (newChrs[1].segments)
+    #print "lower: %d upper: %d\n" % (k[0], k[1])
+    #print "lower: %d upper: %d\n" % (k2[0], k2[1])
+    #print "lower: %d upper: %d\n" % (k3[0], k3[1])
     #print newChrs[0].segments
     #print newChrs[0].getPercentageOfParent("Blue")
     #print (list(newChrs[0].segments))
