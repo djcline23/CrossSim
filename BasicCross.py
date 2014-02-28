@@ -14,7 +14,7 @@ import operator
 import itertools
 from numpy import *
 
-chromosome_phys_max = [15072, 15279, 13784, 17494, 20920, 17719];
+chromosome_phys_max = [15072, 15279, 13784, 17494, 20920, 17719]; #Can be modified for any distinct set of physical max base pairs
 cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
 
 """The following four arrays contain the cross configuration parameters for each back cross"""
@@ -42,8 +42,6 @@ def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
                 
                 if curWorm.chromosome_set[0][chromNumber].getParentAtLocation(loc) == parent or curWorm.chromosome_set[1][chromNumber].getParentAtLocation(loc) == parent:
                   generation.append(curWorm)
-           
-        
 
     return generation
 
@@ -51,7 +49,6 @@ def backCrossTillLimitDiploid(diploidASet, diploidB, physLoc, chromNumber, paren
     """Crosses each worm in set A with worm B until the limit number of offspring that keep the parent segment at the desired location has been met"""
     generation = []
     loc = Chromosome.getLoc(physLoc, chromNumber)
-    print(loc)
     
     while (len(generation) < limit):
         for diploidA in diploidASet:
@@ -59,8 +56,7 @@ def backCrossTillLimitDiploid(diploidASet, diploidB, physLoc, chromNumber, paren
                 
             if curDiploid.chromosome_set[0][chromNumber].getParentAtLocation(loc) == parent or curDiploid.chromosome_set[1][chromNumber].getParentAtLocation(loc) == parent:
                 generation.append(curDiploid)
-           
-        
+    
     return generation
 
 def roundRobinCrossTillLimitDiploid(diploidSet, physLoc, chromNumber, parent, limit):
@@ -74,7 +70,6 @@ def roundRobinCrossTillLimitDiploid(diploidSet, physLoc, chromNumber, parent, li
             if curDiploid.chromosome_set[0][chromNumber].getParentAtLocation(loc) == parent or curDiploid.chromosome_set[1][chromNumber].getParentAtLocation(loc) == parent:
                 generation.append(curDiploid)
            
-        
     return generation
 
 def averagePercentages(diploidSet, targetChrom, targetName):
@@ -90,11 +85,28 @@ def averagePercentages(diploidSet, targetChrom, targetName):
     
     return [totalSelected / (length * 2), totalGenome / length]
 
-if __name__ == '__main__':
+def writeGroupSegments(fileName, group):
+    f = open(fileName, 'wb')
+    t = 1 #Counter for the different individuals that have to printed within each cross 
+    for diploid in group:
+        l = 1 #Counter for the two sets of chromosomes
+        f.write("Individual %d\n" % t)
+        for chrSet in diploid.chromosome_set:
+            f.write("Set %d Chr 1: %s\n" % (l, chrSet[0].segments))
+            f.write("Set %d Chr 2: %s\n" % (l, chrSet[1].segments))
+            f.write("Set %d Chr 3: %s\n" % (l, chrSet[2].segments))
+            f.write("Set %d Chr 4: %s\n" % (l, chrSet[3].segments))
+            f.write("Set %d Chr 5: %s\n" % (l, chrSet[4].segments))
+            f.write("Set %d Chr 6: %s\n" % (l, chrSet[5].segments))
+            l += 1
+        
+        t += 1
+    
+def backCrossSimulation():
   setUpPhysLocs();
   g = open('general_statisics.csv', 'wb')
   g.write('Number of Back Crosses,Number of Individuals,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome\n')
-  physIntervals = []
+  physIntervals = [[]*len(cM_max) for x in xrange(len(cM_max))] #cM_max used as a count of the number of chromosomes
   
   for crossNumber in numCrosses:
     for indNumber in numIndividuals:
@@ -104,36 +116,21 @@ if __name__ == '__main__':
                 Aparent = [ Diploid(name = "A", newChr = 6) ]
                 Bparent = Diploid(name = "B", newChr = 6)
                 targetNameDip = Aparent[0].name
-                physLoc = physLocs[(i * 10) + j]
+                physLoc = physLocs[(i * 10) + j] #Gets the correct physical location break stored within physLocs 
                 genLoc = Chromosome.getLoc(physLoc, chromNumber)
 
                 for k in range(crossNumber):
                     Aparent = backCrossTillLimitDiploid(Aparent, Bparent, physLoc, chromNumber, targetNameDip, indNumber)
     
-                print "chrome number: %d" % chromNumber
                 # Format of the output files is as follows: Number of Crosses_ Number Of Individuals per Cross _ Target Chromosome _ Physical Location on the Target Chromosome
                 fileName = "%d_%d_%d_%d_crossConfig.csv" % (crossNumber, indNumber, chromNumber + 1, physLoc)
-                f = open(fileName, 'wb')
-                t = 1 #Counter for the different individuals that have to printed within each cross 
+                writeGroupSegments(fileName, Aparent)
+
                 for diploid in Aparent:
-                    l = 1 #Counter for the two sets of chromosomes
-                    f.write("Individual %d\n" % t)
                     for chrSet in diploid.chromosome_set:
-                        f.write("Set %d Chr 1: %s\n" % (l, chrSet[0].segments))
-                        f.write("Set %d Chr 2: %s\n" % (l, chrSet[1].segments))
-                        f.write("Set %d Chr 3: %s\n" % (l, chrSet[2].segments))
-                        f.write("Set %d Chr 4: %s\n" % (l, chrSet[3].segments))
-                        f.write("Set %d Chr 5: %s\n" % (l, chrSet[4].segments))
-                        f.write("Set %d Chr 6: %s\n" % (l, chrSet[5].segments))
-                        
                         if chrSet[chromNumber].getParentAtLocation(genLoc) == targetNameDip:
-                            physIntervals.append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
-                            
-                        l += 1
+                            physIntervals[chromNumber].append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
                     
-                    t = t + 1
-                
-                f.close()
                 hold = averagePercentages(Aparent, chromNumber, targetNameDip)
                 averageTarget = hold[0]
                 averageGenome = hold[1]
@@ -142,4 +139,23 @@ if __name__ == '__main__':
             i = i + 1
   
   g.close()
-  print(physIntervals)
+
+  lowerIntervalSums = [0] * len(cM_max)
+  upperIntervalSums = [0] * len(cM_max)
+  lowerIntervalAverages = [0] * len(cM_max)
+  upperIntervalAverages = [0] * len(cM_max)
+  
+  i = 0
+  for chromIntervals in physIntervals:
+    for interval in chromIntervals:
+        lowerIntervalSums[i] += interval[0]
+        upperIntervalSums[i] += interval[1]
+    
+    i += 1
+    
+  for i in range(len(cM_max)):
+    lowerIntervalAverages[i] = lowerIntervalSums[i] / len(physIntervals[i])
+    upperIntervalAverages[i] = upperIntervalSums[i] / len(physIntervals[i])
+    
+if __name__ == '__main__':
+  backCrossSimulation()

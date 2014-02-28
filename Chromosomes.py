@@ -109,7 +109,6 @@ class Chromosome(object):
         i = 0
         gen = cM
         while gen > 0.001:
-            print "i: %d" % i
             gen -= cM_breaks[(number * 3) + i][0]
             seg = cM_breaks[(number * 3) + i][0]
         
