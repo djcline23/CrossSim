@@ -18,17 +18,17 @@ chromosome_phys_max = [15072, 15279, 13784, 17494, 20920, 17719]; #Can be modifi
 cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
 
 """The following four arrays contain the cross configuration parameters for each back cross"""
-numCrosses = range(2, 4, 1)
-numIndividuals = range(4, 6, 1)
-physLocs = [];
-chromNumbers = range(0, 6, 1)
-numPhysBreaks = 10
+numCrosses = range(10, 11, 1) #Configures how many generations of crosses should be done
+numIndividuals = range(4, 6, 1) #Configures the number of individuals in each generation
+physLocs = []; #The physical location of the breaks 
+chromNumbers = range(0, 6, 1) #The number of chromosomes in each haploid
+numPhysBreaks = 10 #The number of physical breaks that each chromosome should be broken into
 
 def setUpPhysLocs():
   i = 0
     
   for kB in chromosome_phys_max:
-    for j in range(1, 1 + numPhysBreaks, 1): #TODO(zifanxiang): change back to 11
+    for j in range(1, 1 + numPhysBreaks, 1): 
       physLocs.append((kB / numPhysBreaks) * j)
         
 def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
@@ -103,6 +103,61 @@ def writeGroupSegments(fileName, group):
         
     t += 1
 
+#numb represents if the desired intervals are the lower of higher intervals
+def separatePhysicalInterval(selectedPhysInterval, numb):
+  toReturn = [0 for i in xrange(len(selectedPhysInterval))]
+
+  for i in range(len(toReturn)):
+    toReturn[i] = selectedPhysInterval[i][numb]
+    
+  return toReturn
+
+def putIntervalsIntoBuckets(physInterval):
+  g = open('interval_buckets.csv', 'wb')
+  g.write('Chromosome Number,Type (Low or High),Min,Max,Bucket Size,Buckets\n')
+  text = ['low', 'high']
+
+  j = 0
+  for chromoInterval in physInterval:
+    for interval in chromoInterval:
+      for i in range(2):
+        sepPhysicalInterval = separatePhysicalInterval(interval, i)
+        low = min(sepPhysicalInterval)
+        high = max(sepPhysicalInterval)
+        toWrite = bucketPhysicalIntervals(sepPhysicalInterval, low, high, 100)
+        
+        g.write('%d,%s,%d,%d,%d,%s\n' % (chromNumbers[j], text[i], low, high, 100, toWrite))
+    
+    j += 1
+
+def bucketPhysicalIntervals(selectedPhysInterval, low, high, bucketSize):
+  size = int(high - low) / bucketSize
+  buckets = [0 for i in range(size)]
+  
+  if (len(buckets) == 0):
+    buckets = [0]
+  
+  for i in range(len(selectedPhysInterval)):
+    bucketPos = int((selectedPhysInterval[i] - low) / bucketSize)
+    print(len(buckets))
+    print(selectedPhysInterval[i])
+    print(low)
+    print(high)
+    print '\n'
+    
+    if bucketPos == len(buckets):
+      bucketPos -= 1
+
+    buckets[bucketPos] += 1
+  
+def writePhysicalIntervalsFile(lowerIntervalAverages, upperIntervalAverages):   
+  g = open('physical_intervals.csv', 'wb')
+  g.write('Chromosome Number,Physical Break Location,Lower Physical Interval, Upper Physical Limit\n')
+  
+  for i in range(len(chromNumbers)):
+    for j in range(numPhysBreaks):
+      g.write('%d,%d,%d,%d\n' % (i, physLocs[j], lowerIntervalAverages[i][j], upperIntervalAverages[i][j]))
+    
 def calculateAveragePhysicalIntervals(physIntervals):
   lowerIntervalSums = [[0 for x in xrange(numPhysBreaks)] for i in xrange(len(cM_max))]
   upperIntervalSums = [[0 for x in xrange(numPhysBreaks)] for i in xrange(len(cM_max))]
@@ -118,14 +173,10 @@ def calculateAveragePhysicalIntervals(physIntervals):
 
   for i in range(len(cM_max)):
     for j in range(numPhysBreaks):
-      print(len(physIntervals[i][j]))
       lowerIntervalAverages[i][j] = lowerIntervalSums[i][j] / len(physIntervals[i][j])
       upperIntervalAverages[i][j] = upperIntervalSums[i][j] / len(physIntervals[i][j])
-   
-  print lowerIntervalAverages
-  print '\n'
-  print upperIntervalAverages
-  #p = open()
+
+  writePhysicalIntervalsFile(lowerIntervalAverages, upperIntervalAverages)
     
 def backCrossSimulation():
   setUpPhysLocs();
@@ -165,6 +216,7 @@ def backCrossSimulation():
   
   g.close()
   calculateAveragePhysicalIntervals(physIntervals)
+  putIntervalsIntoBuckets(physIntervals)
   
 if __name__ == '__main__':
   backCrossSimulation()
