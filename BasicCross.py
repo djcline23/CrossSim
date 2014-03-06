@@ -18,17 +18,18 @@ chromosome_phys_max = [15072, 15279, 13784, 17494, 20920, 17719]; #Can be modifi
 cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
 
 """The following four arrays contain the cross configuration parameters for each back cross"""
-numCrosses = range(2, 7, 1)
+numCrosses = range(2, 4, 1)
 numIndividuals = range(4, 6, 1)
 physLocs = [];
 chromNumbers = range(0, 6, 1)
+numPhysBreaks = 10
 
 def setUpPhysLocs():
     i = 0
     
     for kB in chromosome_phys_max:
-        for j in range(1, 11, 1):
-            physLocs.append((kB / 10) * j)
+        for j in range(1, 1 + numPhysBreaks, 1): #TODO(zifanxiang): change back to 11
+            physLocs.append((kB / numPhysBreaks) * j)
         
 def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
     """Crosses each worm in set A with worm B until the limit number of offspring that keep the parent segment at the desired location has been met"""
@@ -106,17 +107,17 @@ def backCrossSimulation():
   setUpPhysLocs();
   g = open('general_statisics.csv', 'wb')
   g.write('Number of Back Crosses,Number of Individuals,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome\n')
-  physIntervals = [[]*len(cM_max) for x in xrange(len(cM_max))] #cM_max used as a count of the number of chromosomes
-  
+  physIntervals = [[[] for z in xrange(numPhysBreaks)] for x in xrange(len(cM_max))] #cM_max used as a count of the number of chromosomes
+ 
   for crossNumber in numCrosses:
     for indNumber in numIndividuals:
         i = 0
         for chromNumber in chromNumbers:
-            for j in range(0, 10, 1):
+            for j in range(0, numPhysBreaks, 1):
                 Aparent = [ Diploid(name = "A", newChr = 6) ]
                 Bparent = Diploid(name = "B", newChr = 6)
                 targetNameDip = Aparent[0].name
-                physLoc = physLocs[(i * 10) + j] #Gets the correct physical location break stored within physLocs 
+                physLoc = physLocs[(i * numPhysBreaks) + j] #Gets the correct physical location break stored within physLocs 
                 genLoc = Chromosome.getLoc(physLoc, chromNumber)
 
                 for k in range(crossNumber):
@@ -129,33 +130,39 @@ def backCrossSimulation():
                 for diploid in Aparent:
                     for chrSet in diploid.chromosome_set:
                         if chrSet[chromNumber].getParentAtLocation(genLoc) == targetNameDip:
-                            physIntervals[chromNumber].append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
+                            physIntervals[chromNumber][j].append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
                     
                 hold = averagePercentages(Aparent, chromNumber, targetNameDip)
                 averageTarget = hold[0]
                 averageGenome = hold[1]
-                g.write('%d,%d,%d,%d,%f,%f\n' % (crossNumber, indNumber, chromNumber + 1, physLocs[(i * 10) + j], averageTarget, averageGenome))
+                g.write('%d,%d,%d,%d,%f,%f\n' % (crossNumber, indNumber, chromNumber + 1, physLoc, averageTarget, averageGenome))
 
             i = i + 1
   
   g.close()
 
-  lowerIntervalSums = [0] * len(cM_max)
-  upperIntervalSums = [0] * len(cM_max)
-  lowerIntervalAverages = [0] * len(cM_max)
-  upperIntervalAverages = [0] * len(cM_max)
-  
-  i = 0
-  for chromIntervals in physIntervals:
-    for interval in chromIntervals:
-        lowerIntervalSums[i] += interval[0]
-        upperIntervalSums[i] += interval[1]
+  lowerIntervalSums = [[0 for x in xrange(numPhysBreaks)] for i in xrange(len(cM_max))]
+  upperIntervalSums = [[0 for x in xrange(numPhysBreaks)] for i in xrange(len(cM_max))]
+  lowerIntervalAverages = [[0 for x in xrange(numPhysBreaks)] for i in xrange(len(cM_max))]
+  upperIntervalAverages = [[0 for x in xrange(numPhysBreaks)] for i in xrange(len(cM_max))]
     
-    i += 1
-    
+  for x in range(len(physIntervals)):
+    for y in range(len(physIntervals[x])):
+      for z in range(len(physIntervals[x][y])):
+        interval = physIntervals[x][y][z]
+        lowerIntervalSums[x][y] += interval[0]
+        upperIntervalSums[x][y] += interval[1]
+
+  print lowerIntervalSums
   for i in range(len(cM_max)):
-    lowerIntervalAverages[i] = lowerIntervalSums[i] / len(physIntervals[i])
-    upperIntervalAverages[i] = upperIntervalSums[i] / len(physIntervals[i])
+    for j in range(numPhysBreaks):
+      print(len(physIntervals[i][j]))
+      lowerIntervalAverages[i][j] = lowerIntervalSums[i][j] / len(physIntervals[i][j])
+      upperIntervalAverages[i][j] = upperIntervalSums[i][j] / len(physIntervals[i][j])
+    
+  print(lowerIntervalAverages)
+  print('\n')
+  print(upperIntervalAverages)
     
 if __name__ == '__main__':
   backCrossSimulation()
