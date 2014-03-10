@@ -22,16 +22,8 @@ cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
 """The following four arrays contain the cross configuration parameters for each back cross"""
 numCrosses = range(10, 11, 1) #Configures how many generations of crosses should be done
 numIndividuals = range(4, 6, 1) #Configures the number of individuals in each generation
-physLocs = []; #The physical location of the breaks 
+physLoc = 0
 chromNumbers = range(0, 6, 1) #The number of chromosomes in each haploid
-numPhysBreaks = 10 #The number of physical breaks that each chromosome should be broken into
-
-def setUpPhysLocs():
-  i = 0
-    
-  for kB in chromosome_phys_max:
-    for j in range(1, 1 + numPhysBreaks, 1): 
-      physLocs.append((kB / numPhysBreaks) * j)
         
 def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
   """Crosses each worm in set A with worm B until the limit number of offspring that keep the parent segment at the desired location has been met"""
@@ -107,12 +99,12 @@ def writeGroupSegments(fileName, group):
     
   f.close()
 
-#numb represents if the desired intervals are the lower of higher intervals
-def separatePhysicalInterval(selectedPhysInterval, numb):
-  toReturn = [0 for i in xrange(len(selectedPhysInterval))]
-
-  for i in range(len(toReturn)):
-    toReturn[i] = selectedPhysInterval[i][numb]
+#num represents if the desired intervals are the lower of higher intervals, num = 0/1
+def separatePhysicalInterval(selectedPhysInterval, num):
+  toReturn = [0 for x in range(len(selectedPhysInterval))]
+    
+  for i in range(len(selectedPhysInterval)):
+    toReturn[i] = selectedPhysInterval[i][num]
     
   return toReturn
 
@@ -123,14 +115,15 @@ def putIntervalsIntoBuckets(physInterval):
 
   j = 0
   for chromoInterval in physInterval:
-    for interval in chromoInterval:
-      for i in range(2):
-        sepPhysicalInterval = separatePhysicalInterval(interval, i)
-        low = min(sepPhysicalInterval)
-        high = max(sepPhysicalInterval)
-        toWrite = bucketPhysicalIntervals(sepPhysicalInterval, low, high, 100)
+    print chromoInterval
+    print '\n'
+    for i in range(2):
+      sepPhysicalInterval = separatePhysicalInterval(chromoInterval, i)
+      low = min(sepPhysicalInterval)
+      high = max(sepPhysicalInterval)
+      toWrite = bucketPhysicalIntervals(sepPhysicalInterval, low, high, 100)
         
-        g.write('%d,%s,%d,%d,%d,%s\n' % (chromNumbers[j], text[i], low, high, 100, toWrite))
+      g.write('%d,%s,%d,%d,%d,%s\n' % (chromNumbers[j], text[i], low, high, 100, toWrite))
         
     j += 1
 
@@ -158,69 +151,63 @@ def writePhysicalIntervalsFile(lowerIntervalAverages, upperIntervalAverages):
   g.write('Chromosome Number,Physical Break Location,Lower Physical Interval, Upper Physical Limit\n')
   
   for i in range(len(chromNumbers)):
-    for j in range(numPhysBreaks):
-      g.write('%d,%d,%d,%d\n' % (i, physLocs[j], lowerIntervalAverages[i][j], upperIntervalAverages[i][j]))
+    g.write('%d,%d,%d,%d\n' % (i, physLoc, lowerIntervalAverages[i], upperIntervalAverages[i]))
     
 def calculateAveragePhysicalIntervals(physIntervals):
-  lowerIntervalSums = [[0 for x in xrange(numPhysBreaks)] for i in xrange(len(cM_max))]
-  upperIntervalSums = [[0 for x in xrange(numPhysBreaks)] for i in xrange(len(cM_max))]
-  lowerIntervalAverages = [[0 for x in xrange(numPhysBreaks)] for i in xrange(len(cM_max))]
-  upperIntervalAverages = [[0 for x in xrange(numPhysBreaks)] for i in xrange(len(cM_max))]
+  lowerIntervalSums = [0 for i in xrange(len(cM_max))]
+  upperIntervalSums = [0 for i in xrange(len(cM_max))]
+  lowerIntervalAverages = [0 for i in xrange(len(cM_max))]
+  upperIntervalAverages = [0 for i in xrange(len(cM_max))]
     
   for x in range(len(physIntervals)):
     for y in range(len(physIntervals[x])):
-      for z in range(len(physIntervals[x][y])):
-        interval = physIntervals[x][y][z]
-        lowerIntervalSums[x][y] += interval[0]
-        upperIntervalSums[x][y] += interval[1]
+      interval = physIntervals[x][y]
+      lowerIntervalSums[x] += interval[0]
+      upperIntervalSums[x] += interval[1]
 
   for i in range(len(cM_max)):
-    for j in range(numPhysBreaks):
-      lowerIntervalAverages[i][j] = lowerIntervalSums[i][j] / len(physIntervals[i][j])
-      upperIntervalAverages[i][j] = upperIntervalSums[i][j] / len(physIntervals[i][j])
+    lowerIntervalAverages[i] = lowerIntervalSums[i] / len(physIntervals[i])
+    upperIntervalAverages[i] = upperIntervalSums[i] / len(physIntervals[i])
 
   writePhysicalIntervalsFile(lowerIntervalAverages, upperIntervalAverages)
     
 def backCrossSimulation():
-  setUpPhysLocs();
+  physLoc = int(sys.argv[1])
   g = open('general_statisics.csv', 'wb')
   g.write('Number of Back Crosses,Number of Individuals,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome\n')
-  physIntervals = [[[] for z in xrange(numPhysBreaks)] for x in xrange(len(cM_max))] #cM_max used as a count of the number of chromosomes
+  physIntervals = [[] for x in xrange(len(cM_max))] #cM_max used as a count of the number of chromosomes
  
   for crossNumber in numCrosses:
     for indNumber in numIndividuals:
       i = 0
       for chromNumber in chromNumbers:
-        for j in range(0, numPhysBreaks, 1):
-          Aparent = [ Diploid(name = "A", newChr = 6) ]
-          Bparent = Diploid(name = "B", newChr = 6)
-          targetNameDip = Aparent[0].name
-          physLoc = physLocs[(i * numPhysBreaks) + j] #Gets the correct physical location break stored within physLocs 
-          genLoc = Chromosome.getLoc(physLoc, chromNumber)
+        Aparent = [ Diploid(name = "A", newChr = 6) ]
+        Bparent = Diploid(name = "B", newChr = 6)
+        targetNameDip = Aparent[0].name
+        genLoc = Chromosome.getLoc(physLoc, chromNumber)
 
-          for k in range(crossNumber):
-            Aparent = backCrossTillLimitDiploid(Aparent, Bparent, physLoc, chromNumber, targetNameDip, indNumber)
+        for k in range(crossNumber):
+          Aparent = backCrossTillLimitDiploid(Aparent, Bparent, physLoc, chromNumber, targetNameDip, indNumber)
     
-          # Format of the output files is as follows: Number of Crosses_ Number Of Individuals per Cross _ Target Chromosome _ Physical Location on the Target Chromosome
-          fileName = "%d_%d_%d_%d_crossConfig.csv" % (crossNumber, indNumber, chromNumber + 1, physLoc)
-          writeGroupSegments(fileName, Aparent)
+        # Format of the output files is as follows: Number of Crosses_ Number Of Individuals per Cross _ Target Chromosome _ Physical Location on the Target Chromosome
+        fileName = "%d_%d_%d_%d_crossConfig.csv" % (crossNumber, indNumber, chromNumber + 1, physLoc)
+        writeGroupSegments(fileName, Aparent)
 
-          for diploid in Aparent:
-            for chrSet in diploid.chromosome_set:
-              if chrSet[chromNumber].getParentAtLocation(genLoc) == targetNameDip:
-                physIntervals[chromNumber][j].append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
+        for diploid in Aparent:
+          for chrSet in diploid.chromosome_set:
+            if chrSet[chromNumber].getParentAtLocation(genLoc) == targetNameDip:
+              physIntervals[chromNumber].append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
                     
-          hold = averagePercentages(Aparent, chromNumber, targetNameDip)
-          averageTarget = hold[0]
-          averageGenome = hold[1]
-          g.write('%d,%d,%d,%d,%f,%f\n' % (crossNumber, indNumber, chromNumber + 1, physLoc, averageTarget, averageGenome))
+        hold = averagePercentages(Aparent, chromNumber, targetNameDip)
+        averageTarget = hold[0]
+        averageGenome = hold[1]
+        g.write('%d,%d,%d,%d,%f,%f\n' % (crossNumber, indNumber, chromNumber + 1, physLoc, averageTarget, averageGenome))
 
-        i = i + 1
+      i = i + 1
   
   g.close()
   calculateAveragePhysicalIntervals(physIntervals)
   putIntervalsIntoBuckets(physIntervals)
   
 if __name__ == '__main__':
-  print sys.argv[0]
   backCrossSimulation()
