@@ -105,7 +105,7 @@ def writeGroupSegments(fileName, group):
         
     t += 1
     
-    f.close()
+  f.close()
 
 #numb represents if the desired intervals are the lower of higher intervals
 def separatePhysicalInterval(selectedPhysInterval, numb):
