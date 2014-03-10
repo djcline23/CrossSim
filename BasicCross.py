@@ -7,12 +7,14 @@ Zifan Xiang
 Copyright (c) 2014 Northwestern University. All rights reserved.
 """
 
-from WormIndividual import *
-from Individual import*
 from Chromosomes import *
-import operator
-import itertools
+from Individual import*
 from numpy import *
+from WormIndividual import *
+import getopt
+import itertools
+import operator
+import sys
 
 chromosome_phys_max = [15072, 15279, 13784, 17494, 20920, 17719]; #Can be modified for any distinct set of physical max base pairs
 cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
@@ -102,6 +104,8 @@ def writeGroupSegments(fileName, group):
       l += 1
         
     t += 1
+    
+    f.close()
 
 #numb represents if the desired intervals are the lower of higher intervals
 def separatePhysicalInterval(selectedPhysInterval, numb):
@@ -114,8 +118,8 @@ def separatePhysicalInterval(selectedPhysInterval, numb):
 
 def putIntervalsIntoBuckets(physInterval):
   g = open('interval_buckets.csv', 'wb')
-  g.write('Chromosome Number,Type (Low or High),Min,Max,Bucket Size,Buckets\n')
-  text = ['low', 'high']
+  g.write('Chromosome Number,Type (Lower or Upper),Min,Max,Bucket Size,Buckets\n')
+  text = ['Lower', 'Upper']
 
   j = 0
   for chromoInterval in physInterval:
@@ -127,8 +131,10 @@ def putIntervalsIntoBuckets(physInterval):
         toWrite = bucketPhysicalIntervals(sepPhysicalInterval, low, high, 100)
         
         g.write('%d,%s,%d,%d,%d,%s\n' % (chromNumbers[j], text[i], low, high, 100, toWrite))
-    
+        
     j += 1
+
+  g.close()
 
 def bucketPhysicalIntervals(selectedPhysInterval, low, high, bucketSize):
   size = int(high - low) / bucketSize
@@ -139,16 +145,13 @@ def bucketPhysicalIntervals(selectedPhysInterval, low, high, bucketSize):
   
   for i in range(len(selectedPhysInterval)):
     bucketPos = int((selectedPhysInterval[i] - low) / bucketSize)
-    print(len(buckets))
-    print(selectedPhysInterval[i])
-    print(low)
-    print(high)
-    print '\n'
     
     if bucketPos == len(buckets):
       bucketPos -= 1
 
     buckets[bucketPos] += 1
+
+  return buckets
   
 def writePhysicalIntervalsFile(lowerIntervalAverages, upperIntervalAverages):   
   g = open('physical_intervals.csv', 'wb')
@@ -219,4 +222,5 @@ def backCrossSimulation():
   putIntervalsIntoBuckets(physIntervals)
   
 if __name__ == '__main__':
+  print sys.argv[0]
   backCrossSimulation()
