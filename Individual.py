@@ -6,11 +6,11 @@ Individual.py
 Created by Joshua Shapiro on 2008-08-11.
 """
 from __future__ import division
+from Chromosomes import *
+from numpy import *
+from WormUtils import *
 import operator
 import itertools
-
-from numpy import *
-from Chromosomes import *
 
 def newChromosomes(parent, n = None, cM = 200, chrNames=None, interference = "absent"):
     """Generates a list of n chromosomes, each with length cM (possibly a list, in which case n is optional)"""

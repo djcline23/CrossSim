@@ -5,21 +5,16 @@ Chromosomes.py
 
 Created by Joshua Shapiro on 2008-08-11.
 """
-from __future__ import division 
+from __future__ import division
+from numpy import *
+from WormUtils import *
 import itertools
 import operator
-
-
-from numpy import *
-
-chromosome_phys_max = [15072, 15279, 13784, 17494, 20920, 17719];
-cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
 
 def generateBreaksPoisson(cM = 200):
     breaks = random.uniform(size = random.poisson(cM/100.0))
     breaks.sort()
     return breaks
-
 
 class Chromosome(object):
     """Chromosome object which contains information on parentage of segments"""
@@ -60,8 +55,7 @@ class Chromosome(object):
     def getGeneticDistance(physLoc, number):
         """Gets the centimorgan location from a physical location in kilobases"""
         
-        if physLoc > chromosome_phys_max[number] or physLoc < 0:
-            raise ValueError, "Physical location must be within the range of the chromosome"
+        check_physLoc(physLoc, number)
         
         chromosome_breaks = [(527, 0), (3331, 3.43), (7182, 1.34), (3835, 6.78), (197, 0),
                              (306, 0), (4573, 4.92), (7141, 1.33), (2589, 8.47), (670, 0),

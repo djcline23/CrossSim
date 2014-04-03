@@ -11,13 +11,13 @@ from Chromosomes import *
 from Individual import*
 from numpy import *
 from WormIndividual import *
+from WormUtils import *
 import getopt
 import itertools
 import operator
+import os.path
 import sys
 
-chromosome_phys_max = [15072, 15279, 13784, 17494, 20920, 17719]; #Can be modified for any distinct set of physical max base pairs
-cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
     
 def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
   """Crosses each worm in set A with worm B until the limit number of offspring that keep the parent segment at the desired location has been met"""
@@ -161,10 +161,15 @@ def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber):
 def backCrossSimulation():
   physLoc = int(sys.argv[1])
   chromNumber = int(sys.argv[2])
-  numCrosses = range(int(sys.argv[3]), int(sys.argv[3]) + 1, 1)
-  numIndividuals = range(int(sys.argv[4]), int(sys.argv[4]) + 1, 1)
-  g = open('general_statisics.csv', 'wb')
-  g.write('Number of Back Crosses,Number of Individuals,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome\n')
+  numCrosses = range(int(sys.argv[3]), int(sys.argv[4]) + int(sys.argv[5]), int(sys.argv[5]))
+  numIndividuals = range(int(sys.argv[6]), int(sys.argv[7]) + int(sys.argv[8]), int(sys.argv[8]))
+  
+  if os.path.isfile('general_statistics.csv'):
+    g = open('general_statistics', 'a')
+  else:
+    g = open('general_statisics.csv', 'wb')
+    g.write('Number of Back Crosses,Number of Individuals,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome\n')
+  
   physIntervals = []
  
   for crossNumber in numCrosses:
@@ -194,6 +199,7 @@ def backCrossSimulation():
   g.close()
   calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber)
   putIntervalsIntoBuckets(physIntervals, chromNumber)
-  
+
+#Parameters: physLoc chromNumber numCrossStart numCrossEnd numCrossStep numIndStart numIndEnd numIndStep
 if __name__ == '__main__':
   backCrossSimulation()
