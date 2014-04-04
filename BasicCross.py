@@ -18,7 +18,6 @@ import operator
 import os.path
 import sys
 
-    
 def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
   """Crosses each worm in set A with worm B until the limit number of offspring that keep the parent segment at the desired location has been met"""
   generation = []
@@ -102,24 +101,6 @@ def separatePhysicalInterval(selectedPhysInterval, num):
     
   return toReturn
 
-def putIntervalsIntoBuckets(physInterval, chromNumber):
-  g = open('interval_buckets.csv', 'wb')
-  g.write('Chromosome Number,Type (Lower or Upper),Min,Max,Bucket Size,Buckets\n')
-  text = ['Lower', 'Upper']
-
-  j = 0
-  for i in range(2):
-    sepPhysicalInterval = separatePhysicalInterval(physInterval, i)
-    low = min(sepPhysicalInterval)
-    high = max(sepPhysicalInterval)
-    toWrite = bucketPhysicalIntervals(sepPhysicalInterval, low, high, 100)
-        
-    g.write('%d,%s,%d,%d,%d,%s\n' % (chromNumber, text[i], low, high, 100, toWrite))
-        
-    j += 1
-
-  g.close()
-
 def bucketPhysicalIntervals(selectedPhysInterval, low, high, bucketSize):
   size = int(high - low) / bucketSize
   buckets = [0 for i in range(size)]
@@ -136,13 +117,27 @@ def bucketPhysicalIntervals(selectedPhysInterval, low, high, bucketSize):
     buckets[bucketPos] += 1
 
   return buckets
-  
-def writePhysicalIntervalsFile(lowerIntervalAverages, upperIntervalAverages, physLoc, chromNumber):   
-  g = open('physical_intervals.csv', 'wb')
-  g.write('Chromosome Number,Physical Break Location,Lower Physical Interval, Upper Physical Limit\n')
-  g.write('%d,%d,%d,%d\n' % (chromNumber, physLoc, lowerIntervalAverages, upperIntervalAverages))
+
+def putIntervalsIntoBuckets(physInterval, bucketSize, filePath):
     
-def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber):
+  filePath.write(',%d' % bucketSize)
+  
+  for i in range(2):
+    sepPhysicalInterval = separatePhysicalInterval(physInterval, i)
+    low = min(sepPhysicalInterval)
+    high = max(sepPhysicalInterval)
+    toWrite = bucketPhysicalIntervals(sepPhysicalInterval, low, high, bucketSize)
+    numUnique = 0;
+    
+    for bucket in toWrite:
+      if bucket != 0:
+        numUnique += 1;
+        
+    filePath.write(',%d,%d,%d' % (low, high, numUnique))
+        
+  filePath.write('\n')
+    
+def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, filePath):
   lowerIntervalSums = 0
   upperIntervalSums = 0
   lowerIntervalAverages = 0
@@ -156,23 +151,23 @@ def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber):
     lowerIntervalAverages = lowerIntervalSums / len(physIntervals)
     upperIntervalAverages = upperIntervalSums / len(physIntervals)
 
-  writePhysicalIntervalsFile(lowerIntervalAverages, upperIntervalAverages, physLoc, chromNumber)
-    
+  filePath.write(',%d,%d' % (lowerIntervalAverages, upperIntervalAverages))
+
 def backCrossSimulation():
   physLoc = int(sys.argv[1])
   chromNumber = int(sys.argv[2])
   numCrosses = range(int(sys.argv[3]), int(sys.argv[4]) + int(sys.argv[5]), int(sys.argv[5]))
   numIndividuals = range(int(sys.argv[6]), int(sys.argv[7]) + int(sys.argv[8]), int(sys.argv[8]))
+  bucketSize = int(sys.argv[9])
   
   if os.path.isfile('general_statistics.csv'):
-    g = open('general_statistics', 'a')
+    g = open('general_statistics.csv', 'a')
   else:
-    g = open('general_statisics.csv', 'wb')
-    g.write('Number of Back Crosses,Number of Individuals,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome\n')
-  
-  physIntervals = []
- 
+    g = open('general_statistics.csv', 'wb')
+    g.write('Number of Back Crosses,Number of Individuals,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome,Left Physical Loc,Right Physical Loc,Bucket Size, Left Distal, Left Proximal, Left Unique, Right Proximal, Right Distal, Right Unique \n')
+   
   for crossNumber in numCrosses:
+    physIntervals = []
     for indNumber in numIndividuals:
       Aparent = [ Diploid(name = "A", newChr = 6) ]
       Bparent = Diploid(name = "B", newChr = 6)
@@ -194,11 +189,11 @@ def backCrossSimulation():
       hold = averagePercentages(Aparent, chromNumber, targetNameDip)
       averageTarget = hold[0]
       averageGenome = hold[1]
-      g.write('%d,%d,%d,%d,%f,%f\n' % (crossNumber, indNumber, chromNumber + 1, physLoc, averageTarget, averageGenome))
-  
+      g.write('%d,%d,%d,%d,%f,%f' % (crossNumber, indNumber, chromNumber + 1, physLoc, averageTarget, averageGenome))
+      calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, g)
+      putIntervalsIntoBuckets(physIntervals, bucketSize, g)
+
   g.close()
-  calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber)
-  putIntervalsIntoBuckets(physIntervals, chromNumber)
 
 #Parameters: physLoc chromNumber numCrossStart numCrossEnd numCrossStep numIndStart numIndEnd numIndStep
 if __name__ == '__main__':

@@ -23,6 +23,7 @@ if __name__ == '__main__':
   indEnd = int(input("Enter the ending number of individuals (per cross): "))
   indStep = int(input("Enter the number of steps between the start and end individuals: "))
   numIter = int(input("Enter the number of iterations of these crosses: "))
+  bucketSize = int(input("Enter the bucket size for the physical intervals: "))
   
   for i in range(numIter):
-    os.system("BasicCross.py %d %d %d %d %d %d %d %d" % (physLoc, chromNumber, crossStart, crossEnd, crossStep, indStart, indEnd, indStep))
+    os.system("BasicCross.py %d %d %d %d %d %d %d %d %d" % (physLoc, chromNumber, crossStart, crossEnd, crossStep, indStart, indEnd, indStep, bucketSize))
