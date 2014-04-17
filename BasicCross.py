@@ -12,11 +12,12 @@ from Individual import*
 from numpy import *
 from WormIndividual import *
 from WormUtils import *
-import getopt
 import itertools
 import operator
 import os.path
 import sys
+import thread
+import threading
 
 def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
   """Crosses each worm in set A with worm B until the limit number of offspring that keep the parent segment at the desired location has been met"""
@@ -153,13 +154,7 @@ def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, fileP
 
   filePath.write(',%d,%d' % (lowerIntervalAverages, upperIntervalAverages))
 
-def backCrossSimulation():
-  physLoc = int(sys.argv[1])
-  chromNumber = int(sys.argv[2])
-  numCrosses = range(int(sys.argv[3]), int(sys.argv[4]) + int(sys.argv[5]), int(sys.argv[5]))
-  numIndividuals = range(int(sys.argv[6]), int(sys.argv[7]) + int(sys.argv[8]), int(sys.argv[8]))
-  bucketSize = int(sys.argv[9])
-  
+def backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucketSize):
   if os.path.isfile('general_statistics.csv'):
     g = open('general_statistics.csv', 'a')
   else:
@@ -195,6 +190,21 @@ def backCrossSimulation():
 
   g.close()
 
-#Parameters: physLoc chromNumber numCrossStart numCrossEnd numCrossStep numIndStart numIndEnd numIndStep
+def print_time( threadName, delay):
+   count = 0
+   while count < 5:
+      time.sleep(delay)
+      count += 1
+      print "%s: %s" % ( threadName, time.ctime(time.time()) )
+
+#Parameters: physLoc chromNumber numCrossStart numCrossEnd numCrossStep numIndStart numIndEnd numIndStep bucketSize
 if __name__ == '__main__':
-  backCrossSimulation()
+  physLoc = int(sys.argv[1])
+  chromNumber = int(sys.argv[2]) - 1;
+  numCrosses = range(int(sys.argv[3]), int(sys.argv[4]) + int(sys.argv[5]), int(sys.argv[5]))
+  numIndividuals = range(int(sys.argv[6]), int(sys.argv[7]) + int(sys.argv[8]), int(sys.argv[8]))
+  bucketSize = int(sys.argv[9])
+  numIter = int(sys.argv[10])
+  
+  for i in range(numIter):
+    backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucketSize)
