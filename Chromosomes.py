@@ -247,7 +247,7 @@ class Chromosome(object):
             i += 1
 
         if seg[i - 1][1] == parentName:
-            percent += 1 - seg[i - 1][0]
+            percent += 1.0 - seg[i - 1][0]
         
         return percent
     

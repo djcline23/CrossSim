@@ -19,6 +19,8 @@ import sys
 import thread
 import threading
 
+lock = threading.Lock();
+
 def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
   """Crosses each worm in set A with worm B until the limit number of offspring that keep the parent segment at the desired location has been met"""
   generation = []
@@ -74,6 +76,39 @@ def averagePercentages(diploidSet, targetChrom, targetName):
     
   return [totalSelected / (length * 2), totalGenome / length]
 
+def writeGeneralStatistics(crossNumber, physLoc, diploidSet, targetChrom, targetName, bucketSize, g):
+  indNumber = 1;
+  genLoc = Chromosome.getLoc(physLoc, chromNumber)
+  
+  for diploid in diploidSet:
+    totalSelected = 0
+    curIntervals = []
+  
+    for chrSet in diploid.chromosome_set:
+      percent = chrSet[targetChrom].getPercentageOfParent(targetName)
+      print(percent)
+      totalSelected += chrSet[targetChrom].getPercentageOfParent(targetName);
+        
+      if chrSet[chromNumber].getParentAtLocation(genLoc) == targetName:
+        curIntervals.append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
+            
+    
+    totalLower = 0;
+    totalUpper = 0;
+    for interval in curIntervals:
+      totalLower += interval[0];
+      totalUpper += interval[1]
+      
+    perGenome = diploid.getPercentageOfGenome(targetName)
+    avgLower = totalLower / len(curIntervals)
+    avgUpper = totalUpper / len(curIntervals)
+    avgSelected = totalSelected / 2
+    g.write('%d,%d,%d,%d,%f,%f, %d, %d\n' % (crossNumber, indNumber, targetChrom + 1, physLoc, avgSelected, perGenome, avgLower, avgUpper))
+    #calculateAveragePhysicalIntervals(curIntervals, physLoc, targetChrom, g)
+    #putIntervalsIntoBuckets(curIntervals, bucketSize, g)
+    indNumber += 1
+    
+
 def writeGroupSegments(fileName, group):
   f = open(fileName, 'wb')
   t = 1 #Counter for the different individuals that have to printed within each cross 
@@ -93,7 +128,7 @@ def writeGroupSegments(fileName, group):
     
   f.close()
 
-#num represents if the desired intervals are the lower of higher intervals, num = 0/1
+#num represents if the desired intervals are the lower or higher intervals, num = 0/1
 def separatePhysicalInterval(selectedPhysInterval, num):
   toReturn = [0 for x in range(len(selectedPhysInterval))]
   
@@ -155,12 +190,13 @@ def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, fileP
   filePath.write(',%d,%d' % (lowerIntervalAverages, upperIntervalAverages))
 
 def backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucketSize):
-  if os.path.isfile('general_statistics.csv'):
-    g = open('general_statistics.csv', 'a')
+  if os.path.isfile('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1)):
+    g = open('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1), 'a')
   else:
-    g = open('general_statistics.csv', 'wb')
-    g.write('Number of Back Crosses,Number of Individuals,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome,Left Physical Loc,Right Physical Loc,Bucket Size, Left Distal, Left Proximal, Left Unique, Right Proximal, Right Distal, Right Unique \n')
-   
+    g = open('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1), 'wb')
+    g.write('Number of Back Crosses,Individual Number,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome,Left Physical Loc,Right Physical Loc,Bucket Size, Left Distal, Left Proximal, Left Unique, Right Proximal, Right Distal, Right Unique \n')
+
+  #Runs through the number of crosses specified and makes the individuals
   for crossNumber in numCrosses:
     physIntervals = []
     for indNumber in numIndividuals:
@@ -181,30 +217,54 @@ def backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucket
           if chrSet[chromNumber].getParentAtLocation(genLoc) == targetNameDip:
             physIntervals.append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
                     
-      hold = averagePercentages(Aparent, chromNumber, targetNameDip)
-      averageTarget = hold[0]
-      averageGenome = hold[1]
-      g.write('%d,%d,%d,%d,%f,%f' % (crossNumber, indNumber, chromNumber + 1, physLoc, averageTarget, averageGenome))
-      calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, g)
-      putIntervalsIntoBuckets(physIntervals, bucketSize, g)
+      
+      writeGeneralStatistics(crossNumber, physLoc, Aparent, chromNumber, targetNameDip, bucketSize, g)
+      #hold = averagePercentages(Aparent, chromNumber, targetNameDip)
+      #averageTarget = hold[0]
+      #averageGenome = hold[1]
+      #calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, g)
+      #putIntervalsIntoBuckets(physIntervals, bucketSize, g)
 
   g.close()
 
-def print_time( threadName, delay):
-   count = 0
-   while count < 5:
-      time.sleep(delay)
-      count += 1
-      print "%s: %s" % ( threadName, time.ctime(time.time()) )
+class CrossThread (threading.Thread):
+    def __init__(self, threadID, physLoc, chromNumber, numCrosses, numIndividuals, bucketSize):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.physLoc = physLoc
+        self.chromNumber = chromNumber
+        self.numCrosses = numCrosses;
+        self.numIndividuals = numIndividuals
+        self.bucketSize = bucketSize
+    
+    def run(self):
+        print(self.threadID)
+        backCrossSimulation(self.physLoc, self.chromNumber, self.numCrosses, self.numIndividuals, self.bucketSize)
 
 #Parameters: physLoc chromNumber numCrossStart numCrossEnd numCrossStep numIndStart numIndEnd numIndStep bucketSize
 if __name__ == '__main__':
   physLoc = int(sys.argv[1])
   chromNumber = int(sys.argv[2]) - 1;
   numCrosses = range(int(sys.argv[3]), int(sys.argv[4]) + int(sys.argv[5]), int(sys.argv[5]))
+  #TODO(zifanxiang): Will keep the numIndividuals as a range but the inputs will just have one value in the range
+  #TODO(zifanxiang): Potentially change to just one number
   numIndividuals = range(int(sys.argv[6]), int(sys.argv[7]) + int(sys.argv[8]), int(sys.argv[8]))
   bucketSize = int(sys.argv[9])
   numIter = int(sys.argv[10])
+  #numThreads = int(sys.argv[11])
   
   for i in range(numIter):
     backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucketSize)
+  
+  #threads = []
+  
+  #for i in range(numThreads):
+  #  threads.append(CrossThread('%d' % i, physLoc, chromNumber, numCrosses, numIndividuals, bucketSize))
+  
+  #for i in range(numIter / numThreads):
+  #  for i in range(numThreads):
+  #    threads[i].start()
+    
+  #for t in threads:
+  #  t.join()
+    
