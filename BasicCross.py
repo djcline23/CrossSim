@@ -88,7 +88,6 @@ def writeGeneralStatistics(crossNumber, physLoc, diploidSet, targetChrom, target
   
     for chrSet in diploid.chromosome_set:
       percent = chrSet[targetChrom].getPercentageOfParent(targetName)
-      print(percent)
       totalSelected += chrSet[targetChrom].getPercentageOfParent(targetName);
         
       if chrSet[chromNumber].getParentAtLocation(genLoc) == targetName:
@@ -191,33 +190,30 @@ def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, fileP
 
   filePath.write(',%d,%d' % (lowerIntervalAverages, upperIntervalAverages))
 
-def backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucketSize):
+def backCrossSimulation(physLoc, chromNumber, crossNumber, indNumber, bucketSize):
   if os.path.isfile('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1)):
     g = open('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1), 'a')
   else:
     g = open('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1), 'wb')
-    g.write('Number of Back Crosses,Individual Number,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome,Left Physical Loc,Right Physical Loc,Bucket Size, Left Distal, Left Proximal, Left Unique, Right Proximal, Right Distal, Right Unique \n')
+    g.write('Number of Back Crosses,Individual Number,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome,Left Physical Loc,Right Physical Loc\n')
 
   #Runs through the number of crosses specified and makes the individuals
-  for crossNumber in numCrosses:
-    physIntervals = []
-    for indNumber in numIndividuals:
-      AparentSet = []
-      for i in range(indNumber):
-        AparentSet.append(Diploid(name = "A", newChr = 6))
+  physIntervals = []
+  AparentSet = []
+  for i in range(indNumber):
+    AparentSet.append(Diploid(name = "A", newChr = 6))
         
-      Bparent = Diploid(name = "B", newChr = 6)
-      targetNameDip = AparentSet[0].name
-      genLoc = Chromosome.getLoc(physLoc, chromNumber)
+  Bparent = Diploid(name = "B", newChr = 6)
+  targetNameDip = AparentSet[0].name
+  genLoc = Chromosome.getLoc(physLoc, chromNumber)
 
-      for k in range(crossNumber):
-        AparentSet = backCrossTillLimitDiploid(AparentSet, Bparent, physLoc, chromNumber, targetNameDip, indNumber)
-        writeGeneralStatistics(k + 1, physLoc, AparentSet, chromNumber, targetNameDip, bucketSize, g)
-
+  for k in range(crossNumber):
+    AparentSet = backCrossTillLimitDiploid(AparentSet, Bparent, physLoc, chromNumber, targetNameDip, indNumber)
+    writeGeneralStatistics(k + 1, physLoc, AparentSet, chromNumber, targetNameDip, bucketSize, g)
     
-      # Format of the output files is as follows: Number of Crosses_ Number Of Individuals per Cross _ Target Chromosome _ Physical Location on the Target Chromosome
-      fileName = "%d_%d_%d_%d_crossConfig.csv" % (crossNumber, indNumber, chromNumber + 1, physLoc)
-      writeGroupSegments(fileName, AparentSet)
+  # Format of the output files is as follows: Number of Crosses_ Number Of Individuals per Cross _ Target Chromosome _ Physical Location on the Target Chromosome
+  fileName = "%d_%d_%d_%d_crossConfig.csv" % (crossNumber, indNumber, chromNumber + 1, physLoc)
+  writeGroupSegments(fileName, AparentSet)
 
       #for diploid in Aparent:
       #  for chrSet in diploid.chromosome_set:
@@ -252,12 +248,10 @@ class CrossThread (threading.Thread):
 if __name__ == '__main__':
   physLoc = int(sys.argv[1])
   chromNumber = int(sys.argv[2]) - 1;
-  numCrosses = range(int(sys.argv[3]), int(sys.argv[4]) + int(sys.argv[5]), int(sys.argv[5]))
-  #TODO(zifanxiang): Will keep the numIndividuals as a range but the inputs will just have one value in the range
-  #TODO(zifanxiang): Potentially change to just one number
-  numIndividuals = range(int(sys.argv[6]), int(sys.argv[7]) + int(sys.argv[8]), int(sys.argv[8]))
-  bucketSize = int(sys.argv[9])
-  numIter = int(sys.argv[10])
+  numCrosses = int(sys.argv[3])
+  numIndividuals = int(sys.argv[4])
+  bucketSize = int(sys.argv[5])
+  numIter = int(sys.argv[6])
   #numThreads = int(sys.argv[11])
   
   for i in range(numIter):
