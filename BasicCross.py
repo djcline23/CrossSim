@@ -27,7 +27,7 @@ def backCrossTillLimit(wormASet, wormB, physLoc, chromNumber, parent, limit):
   loc = Chromosome.getLoc(physLoc, chromNumber)
     
   while (len(generation) < limit):
-    for wormA in wormASet:
+    for wormA in wormASet:  
       if (wormA.sex == "hermaphrodite"):
         curWorm = wormA.mate(wormB)
         
@@ -40,13 +40,15 @@ def backCrossTillLimitDiploid(diploidASet, diploidB, physLoc, chromNumber, paren
   """Crosses each worm in set A with worm B until the limit number of offspring that keep the parent segment at the desired location has been met"""
   generation = []
   loc = Chromosome.getLoc(physLoc, chromNumber)
+  
+  for diploidA in diploidASet:  
+    curDiploid = diploidA.mate(diploidB)[0]
     
-  while (len(generation) < limit):
-    for diploidA in diploidASet:
+    while (curDiploid.chromosome_set[0][chromNumber].getParentAtLocation(loc) != parent and curDiploid.chromosome_set[1][chromNumber].getParentAtLocation(loc) != parent):                
       curDiploid = diploidA.mate(diploidB)[0]
-                
-    if curDiploid.chromosome_set[0][chromNumber].getParentAtLocation(loc) == parent or curDiploid.chromosome_set[1][chromNumber].getParentAtLocation(loc) == parent:
-      generation.append(curDiploid)
+    #if curDiploid.chromosome_set[0][chromNumber].getParentAtLocation(loc) == parent or curDiploid.chromosome_set[1][chromNumber].getParentAtLocation(loc) == parent:
+      
+    generation.append(curDiploid)
     
   return generation
 
@@ -200,25 +202,30 @@ def backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucket
   for crossNumber in numCrosses:
     physIntervals = []
     for indNumber in numIndividuals:
-      Aparent = [ Diploid(name = "A", newChr = 6) ]
+      AparentSet = []
+      for i in range(indNumber):
+        AparentSet.append(Diploid(name = "A", newChr = 6))
+        
       Bparent = Diploid(name = "B", newChr = 6)
-      targetNameDip = Aparent[0].name
+      targetNameDip = AparentSet[0].name
       genLoc = Chromosome.getLoc(physLoc, chromNumber)
 
       for k in range(crossNumber):
-        Aparent = backCrossTillLimitDiploid(Aparent, Bparent, physLoc, chromNumber, targetNameDip, indNumber)
+        AparentSet = backCrossTillLimitDiploid(AparentSet, Bparent, physLoc, chromNumber, targetNameDip, indNumber)
+        writeGeneralStatistics(k + 1, physLoc, AparentSet, chromNumber, targetNameDip, bucketSize, g)
+
     
       # Format of the output files is as follows: Number of Crosses_ Number Of Individuals per Cross _ Target Chromosome _ Physical Location on the Target Chromosome
       fileName = "%d_%d_%d_%d_crossConfig.csv" % (crossNumber, indNumber, chromNumber + 1, physLoc)
-      writeGroupSegments(fileName, Aparent)
+      writeGroupSegments(fileName, AparentSet)
 
-      for diploid in Aparent:
-        for chrSet in diploid.chromosome_set:
-          if chrSet[chromNumber].getParentAtLocation(genLoc) == targetNameDip:
-            physIntervals.append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
+      #for diploid in Aparent:
+      #  for chrSet in diploid.chromosome_set:
+      #    if chrSet[chromNumber].getParentAtLocation(genLoc) == targetNameDip:
+      #      physIntervals.append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
                     
       
-      writeGeneralStatistics(crossNumber, physLoc, Aparent, chromNumber, targetNameDip, bucketSize, g)
+      #writeGeneralStatistics(crossNumber, physLoc, Aparent, chromNumber, targetNameDip, bucketSize, g)
       #hold = averagePercentages(Aparent, chromNumber, targetNameDip)
       #averageTarget = hold[0]
       #averageGenome = hold[1]
