@@ -4,7 +4,7 @@
 WormUtils.py
 """
 
-chromosome_phys_max = [15072, 15279, 13784, 17494, 20920, 17719]
+chromosome_phys_max = [15072000, 15279000, 13784000, 17494000, 20920000, 17719000]
 cM_max = [47.0507, 53.92552, 53.84778, 47.44498, 51.69473, 52.22193]
 
 def check_chromosome_number(chromNumber):

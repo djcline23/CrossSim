@@ -57,12 +57,12 @@ class Chromosome(object):
         
         check_physLoc(physLoc, number)
         
-        chromosome_breaks = [(527, 0), (3331, 3.43), (7182, 1.34), (3835, 6.78), (197, 0),
-                             (306, 0), (4573, 4.92), (7141, 1.33), (2589, 8.47), (670, 0),
-                             (494, 0), (3228, 7.83), (6618, 1.17), (2877, 7.24), (567, 0),
-                             (720, 0), (3176, 7.65), (9074, 1.05), (3742, 3.64), (782, 0),
-                             (643, 0), (5254, 3.22), (10653, 1.32), (3787, 5.47), (583, 0),
-                             (572, 0), (5565, 3.81), (6343, 1.70), (3937, 5.14), (1302, 0)]
+        chromosome_breaks = [(527000, 0), (3331000, 3.43), (7182000, 1.34), (3835000, 6.78), (197000, 0),
+                             (306000, 0), (4573000, 4.92), (7141000, 1.33), (2589000, 8.47), (670000, 0),
+                             (494000, 0), (3228000, 7.83), (6618000, 1.17), (2877000, 7.24), (567000, 0),
+                             (720000, 0), (3176000, 7.65), (9074000, 1.05), (3742000, 3.64), (782000, 0),
+                             (643000, 0), (5254000, 3.22), (10653000, 1.32), (3787000, 5.47), (583000, 0),
+                             (572000, 0), (5565000, 3.81), (6343000, 1.70), (3937000, 5.14), (1302000, 0)]
         genLoc = 0
         i = 0
         kb = physLoc
@@ -74,7 +74,7 @@ class Chromosome(object):
             if kb < 0:
                 seg += kb
                 
-            genLoc += (seg/1000) * chromosome_breaks[(number * 5) + i][1]
+            genLoc += (seg/1000000) * chromosome_breaks[(number * 5) + i][1]
             i+=1
         return genLoc
     
@@ -87,8 +87,8 @@ class Chromosome(object):
     @staticmethod
     def getPhysDistance(cM, number):
         """Gets the physical location in kilobases from the given centimorgan location"""
-        kb_shifts_left = [527, 306, 494, 720, 643, 572]
-        kb_shifts_right = [197, 670, 567, 782, 583, 1302]
+        kb_shifts_left = [527000, 306000, 494000, 720000, 643000, 572000]
+        kb_shifts_right = [197000, 670000, 567000, 782000, 583000, 1302000]
         
         if cM > cM_max[number] or cM < 0:
             raise ValueError, "The centimorgan distance must be within the range of the chromosome"
@@ -109,7 +109,7 @@ class Chromosome(object):
             if gen < 0:
                 seg += gen
         
-            physLoc += (seg * cM_breaks[(number * 3) + i][1])*1000
+            physLoc += (seg * cM_breaks[(number * 3) + i][1])*1000000
             i += 1
         
         if cM == cM_max[number]:

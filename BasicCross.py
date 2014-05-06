@@ -244,7 +244,7 @@ class CrossThread (threading.Thread):
         print(self.threadID)
         backCrossSimulation(self.physLoc, self.chromNumber, self.numCrosses, self.numIndividuals, self.bucketSize)
 
-#Parameters: physLoc chromNumber numCrossStart numCrossEnd numCrossStep numIndStart numIndEnd numIndStep bucketSize
+#Parameters: physLoc chromNumber numCrosses numIndividuals bucketSize numIter
 if __name__ == '__main__':
   physLoc = int(sys.argv[1])
   chromNumber = int(sys.argv[2]) - 1;
