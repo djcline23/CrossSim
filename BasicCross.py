@@ -112,19 +112,24 @@ def writeGeneralStatistics(crossNumber, physLoc, diploidSet, targetChrom, target
 
 def writeGroupSegments(fileName, group):
   f = open(fileName, 'wb')
+  f.write('Individual,Set,Chromosome,Type,Left Position,Right Position\n')
   t = 1 #Counter for the different individuals that have to printed within each cross 
   for diploid in group:
     l = 1 #Counter for the two sets of chromosomes
-    f.write("Individual %d\n" % t)
     for chrSet in diploid.chromosome_set:
-      f.write("Set %d Chr 1: %s\n" % (l, chrSet[0].segments))
-      f.write("Set %d Chr 2: %s\n" % (l, chrSet[1].segments))
-      f.write("Set %d Chr 3: %s\n" % (l, chrSet[2].segments))
-      f.write("Set %d Chr 4: %s\n" % (l, chrSet[3].segments))
-      f.write("Set %d Chr 5: %s\n" % (l, chrSet[4].segments))
-      f.write("Set %d Chr 6: %s\n" % (l, chrSet[5].segments))
-      l += 1
+      j = 1
+      for chromosome in chrSet:
+        for i in range(len(chromosome.segments)):
+          parent = chromosome.segments[i][1]
+          leftLoc = Chromosome.getPhysDistanceFromLoc(chromosome.segments[i][0], j - 1) 
+          rightLoc = Chromosome.getPhysDistanceFromLoc(1, j - 1) ;
+          
+          if (i + 1 != len(chromosome.segments)):
+            rightLoc = Chromosome.getPhysDistanceFromLoc(chromosome.segments[i + 1][0], j - 1) 
         
+          f.write('%d,%d,%d,%s,%d,%d\n' % (t, l, j, parent, leftLoc, rightLoc))
+        j += 1
+      l += 1
     t += 1
     
   f.close()
@@ -225,7 +230,13 @@ def backCrossSimulation(physLoc, chromNumber, crossNumber, indNumber, bucketSize
 
   # Format of the output files is as follows: Number of Crosses_ Number Of Individuals per Cross _ Target Chromosome _ Physical Location on the Target Chromosome
   fileName = "%d_%d_%d_%d_crossConfig.csv" % (crossNumber, indNumber, chromNumber + 1, physLoc)
-  writeGroupSegments(fileName, AparentSet)
+  
+  truncAparentSet = []
+  
+  for i in range(numIndividuals / 10):
+    truncAparentSet.append(AparentSet[i])
+    
+  writeGroupSegments(fileName, truncAparentSet)
 
       #writeGeneralStatistics(crossNumber, physLoc, Aparent, chromNumber, targetNameDip, bucketSize, g)
       #hold = averagePercentages(Aparent, chromNumber, targetNameDip)
@@ -262,16 +273,3 @@ if __name__ == '__main__':
   
   for i in range(numIter):
     backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucketSize)
-  
-  #threads = []
-  
-  #for i in range(numThreads):
-  #  threads.append(CrossThread('%d' % i, physLoc, chromNumber, numCrosses, numIndividuals, bucketSize))
-  
-  #for i in range(numIter / numThreads):
-  #  for i in range(numThreads):
-  #    threads[i].start()
-    
-  #for t in threads:
-  #  t.join()
-    
