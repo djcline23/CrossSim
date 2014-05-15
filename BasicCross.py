@@ -15,6 +15,7 @@ from WormUtils import *
 import itertools
 import operator
 import os.path
+import random
 import sys
 import thread
 import threading
@@ -100,7 +101,7 @@ def writeGeneralStatistics(crossNumber, physLoc, diploidSet, targetChrom, target
       totalLower += interval[0];
       totalUpper += interval[1]
       
-    perGenome = diploid.getPercentageOfGenome(targetName)
+    perGenome = diploid.getPercentageOfGenome(targetName, chromNumber)
     avgLower = totalLower / len(curIntervals)
     avgUpper = totalUpper / len(curIntervals)
     avgSelected = totalSelected / 2
@@ -160,8 +161,8 @@ def bucketPhysicalIntervals(selectedPhysInterval, low, high, bucketSize):
 
   return buckets
 
-def putIntervalsIntoBuckets(numCross, chromNumber, physLoc, physInterval, bucketSize, filePath):    
-  filePath.write('%d,%d,%d,%d,' % (numCross, chromNumber + 1, physLoc, bucketSize))
+def putIntervalsIntoBuckets(numCross, chromNumber, physLoc, physInterval, bucketSize, numSampled, filePath):    
+  filePath.write('%d,%d,%d,%d,%d,' % (numCross, chromNumber + 1, physLoc, bucketSize, numSampled))
   
   for i in range(2):
     sepPhysicalInterval = separatePhysicalInterval(physInterval, i)
@@ -177,7 +178,27 @@ def putIntervalsIntoBuckets(numCross, chromNumber, physLoc, physInterval, bucket
     filePath.write('%d,%d,%d,' % (low, high, numUnique))
         
   filePath.write('\n')
+
+def selectRandomSubset(wormSet, numSelect):
+  length = len(wormSet)
+  randomIndices = [];
+  toReturnSet = []
+  random.seed()
+  
+  if numSelect > length:
+    raise ValueError, "The number to be selected cannot be greater than the total set, repeats would be produced"
     
+  while (len(randomIndices) < numSelect):
+    curIndex = random.randint(0, length - 1)
+    
+    if (not(curIndex in randomIndices)):
+      randomIndices.append(curIndex)
+  
+  for i in randomIndices:
+    toReturnSet.append(wormSet[i])
+  
+  return toReturnSet
+       
 def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, filePath):
   lowerIntervalSums = 0
   upperIntervalSums = 0
@@ -194,21 +215,20 @@ def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, fileP
 
   filePath.write(',%d,%d' % (lowerIntervalAverages, upperIntervalAverages))
 
-def backCrossSimulation(physLoc, chromNumber, crossNumber, indNumber, bucketSize):
+def backCrossSimulation(physLoc, chromNumber, crossNumber, indNumber, bucketSize, numRandomSelect, numIter):
   if os.path.isfile('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1)):
     g = open('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1), 'a')
   else:
     g = open('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1), 'wb')
     g.write('Number of Back Crosses,Individual Number,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome,Left Physical Loc,Right Physical Loc\n')
 
-  if os.path.isfile('buckets_%d_%d.csv' % (physLoc, chromNumber + 1)):
-    h = open('buckets_%d_%d.csv' % (physLoc, chromNumber + 1), 'a')
+  if os.path.isfile('buckets_%d_%d_%d_%d.csv' % (physLoc, chromNumber + 1, bucketSize, numRandomSelect)):
+    h = open('buckets_%d_%d_%d_%d.csv' % (physLoc, chromNumber + 1, bucketSize, numRandomSelect), 'a')
   else:
-    h = open('buckets_%d_%d.csv' % (physLoc, chromNumber + 1), 'wb')
-    h.write('Number of Back Crosses,Selected Chromosome,Selected Base Pair,Bucket Size,Minimum Left Base Pair, Maximum Left Base Pair,Number Left Unique Buckets,Minimum Right Base Pair, Maximum Right Base Pair,Number Right Unique Buckets\n')
+    h = open('buckets_%d_%d_%d_%d.csv' % (physLoc, chromNumber + 1, bucketSize, numRandomSelect), 'wb')
+    h.write('Number of Back Crosses,Selected Chromosome,Selected Base Pair,Bucket Size,Number Sampled,Minimum Left Base Pair, Maximum Left Base Pair,Number Left Unique Buckets,Minimum Right Base Pair, Maximum Right Base Pair,Number Right Unique Buckets\n')
   
   #Runs through the number of crosses specified and makes the individuals
-  physIntervals = []
   AparentSet = []
   for i in range(indNumber):
     AparentSet.append(Diploid(name = "A", newChr = 6))
@@ -221,29 +241,26 @@ def backCrossSimulation(physLoc, chromNumber, crossNumber, indNumber, bucketSize
     AparentSet = backCrossTillLimitDiploid(AparentSet, Bparent, physLoc, chromNumber, targetNameDip, indNumber)
     writeGeneralStatistics(k + 1, physLoc, AparentSet, chromNumber, targetNameDip, bucketSize, g)
     
-    for diploid in AparentSet:
-      for chrSet in diploid.chromosome_set:
-        if chrSet[chromNumber].getParentAtLocation(genLoc) == targetNameDip:
-          physIntervals.append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
+    for i in range(numIter):
+      physIntervals = []
+      sampleSet = selectRandomSubset(AparentSet, numRandomSelect);
+      
+      for diploid in sampleSet:
+        for chrSet in diploid.chromosome_set:
+          if chrSet[chromNumber].getParentAtLocation(genLoc) == targetNameDip:
+            physIntervals.append(chrSet[chromNumber].physicalLocsOfInterval(genLoc, chromNumber))
     
-    putIntervalsIntoBuckets(k, chromNumber, physLoc, physIntervals, bucketSize, h)
-
-  # Format of the output files is as follows: Number of Crosses_ Number Of Individuals per Cross _ Target Chromosome _ Physical Location on the Target Chromosome
-  fileName = "%d_%d_%d_%d_crossConfig.csv" % (crossNumber, indNumber, chromNumber + 1, physLoc)
+      putIntervalsIntoBuckets(k + 1, chromNumber, physLoc, physIntervals, bucketSize, numRandomSelect, h)
+      
+    # Format of the output files is as follows: Number of Crosses_ Number Of Individuals per Cross _ Target Chromosome _ Physical Location on the Target Chromosome
+    fileName = "%d_%d_%d_%d_crossConfig.csv" % (k + 1, indNumber, chromNumber + 1, physLoc)
   
-  truncAparentSet = []
+    truncAparentSet = []
   
-  for i in range(numIndividuals / 10):
-    truncAparentSet.append(AparentSet[i])
+    for i in range(10):
+      truncAparentSet.append(AparentSet[i])
     
-  writeGroupSegments(fileName, truncAparentSet)
-
-      #writeGeneralStatistics(crossNumber, physLoc, Aparent, chromNumber, targetNameDip, bucketSize, g)
-      #hold = averagePercentages(Aparent, chromNumber, targetNameDip)
-      #averageTarget = hold[0]
-      #averageGenome = hold[1]
-      #calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, g)
-      #putIntervalsIntoBuckets(physIntervals, bucketSize, g)
+    writeGroupSegments(fileName, truncAparentSet)
 
   g.close()
 
@@ -268,8 +285,7 @@ if __name__ == '__main__':
   numCrosses = int(sys.argv[3])
   numIndividuals = int(sys.argv[4])
   bucketSize = int(sys.argv[5])
-  numIter = int(sys.argv[6])
+  numRandomSelect = int(sys.argv[6])
+  numIter = int(sys.argv[7])
   #numThreads = int(sys.argv[11])
-  
-  for i in range(numIter):
-    backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucketSize)
+  backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucketSize, numRandomSelect, numIter)

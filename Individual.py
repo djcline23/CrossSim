@@ -99,15 +99,15 @@ class Diploid(object):
                   
     
     #TODO(zifanxiang): refactor to use the getPercentage of selected chromosome method
-    def getPercentageOfGenome(self, parentName):
+    def getPercentageOfGenome(self, parentName, chromNumber):
         totalPercentage = 0
         
         for i in range(len(self.chromosome_set)):
             for j in range(self.nChr):
-                totalPercentage += self.chromosome_set[i][j].getPercentageOfParent(parentName)
+                if (j != chromNumber):
+                  totalPercentage += self.chromosome_set[i][j].getPercentageOfParent(parentName)
                
-        
-        return totalPercentage / (len(self.chromosome_set) * self.nChr)   
+        return totalPercentage / (len(self.chromosome_set) * (self.nChr - 1))   
 
 class Haploid(object):
     """Haploid individual, monoecious"""
