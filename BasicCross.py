@@ -175,8 +175,11 @@ def putIntervalsIntoBuckets(numCross, chromNumber, physLoc, physInterval, bucket
       if bucket != 0:
         numUnique += 1;
         
-    filePath.write('%d,%d,%d,' % (low, high, numUnique))
-        
+    filePath.write('%d,%d,%d' % (low, high, numUnique))
+    
+    if (i == 0): 
+      filePath.write(',')
+      
   filePath.write('\n')
 
 def selectRandomSubset(wormSet, numSelect):
