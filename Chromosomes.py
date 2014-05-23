@@ -234,6 +234,7 @@ class Chromosome(object):
             return (Chromosome(name = self.name, cM = self.cM,  segments = chr2), 
                     Chromosome(name = self.name, cM = self.cM,  segments = chr1))            
 
+    #Returns the percentage of the chromosome that has the allele of a particular parent
     def getPercentageOfParent(self, parentName):
         seg = list(self.segments)
         i = 1
@@ -251,6 +252,7 @@ class Chromosome(object):
         
         return percent
     
+    #Returns the left and right bounds of the allele at the selected genetic location
     def physicalLocsOfInterval(self, genLoc, chromNumber):
         seg = list(self.segments)
         i = 0
@@ -263,6 +265,7 @@ class Chromosome(object):
         
         if (i < len(seg)):
             upperBound = seg[i][0]
+            
         if (i > 0):
             lowerBound = seg[i - 1][0]
         else:

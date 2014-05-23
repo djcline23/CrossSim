@@ -66,19 +66,6 @@ def roundRobinCrossTillLimitDiploid(diploidSet, physLoc, chromNumber, parent, li
            
   return generation
 
-def averagePercentages(diploidSet, targetChrom, targetName):
-  length = len(diploidSet)
-  totalSelected = 0
-  totalGenome = 0
-    
-  for diploid in diploidSet:
-    for chrSet in diploid.chromosome_set:
-      totalSelected += chrSet[targetChrom].getPercentageOfParent(targetName)
-        
-    totalGenome += diploid.getPercentageOfGenome(targetName)
-    
-  return [totalSelected / (length * 2), totalGenome / length]
-
 def writeGeneralStatistics(crossNumber, physLoc, diploidSet, targetChrom, targetName, bucketSize, g):
   indNumber = 1;
   genLoc = Chromosome.getLoc(physLoc, chromNumber)
@@ -106,16 +93,14 @@ def writeGeneralStatistics(crossNumber, physLoc, diploidSet, targetChrom, target
     avgUpper = totalUpper / len(curIntervals)
     avgSelected = totalSelected / 2
     g.write('%d,%d,%d,%d,%f,%f,%d,%d\n' % (crossNumber, indNumber, targetChrom + 1, physLoc, avgSelected, perGenome, avgLower, avgUpper))
-    #calculateAveragePhysicalIntervals(curIntervals, physLoc, targetChrom, g)
-    #putIntervalsIntoBuckets(curIntervals, bucketSize, g)
     indNumber += 1
-    
 
-def writeGroupSegments(fileName, group):
+#Takes in the general statistics file and writes summary statistics on a particular generation of the back cross    
+def writeGroupSegments(fileName, diploidSet):
   f = open(fileName, 'wb')
   f.write('Individual,Set,Chromosome,Type,Left Position,Right Position\n')
   t = 1 #Counter for the different individuals that have to printed within each cross 
-  for diploid in group:
+  for diploid in diploidSet:
     l = 1 #Counter for the two sets of chromosomes
     for chrSet in diploid.chromosome_set:
       j = 1
@@ -182,6 +167,7 @@ def putIntervalsIntoBuckets(numCross, chromNumber, physLoc, physInterval, bucket
       
   filePath.write('\n')
 
+#Selects a random subset from a set 
 def selectRandomSubset(wormSet, numSelect):
   length = len(wormSet)
   randomIndices = [];
@@ -201,7 +187,8 @@ def selectRandomSubset(wormSet, numSelect):
     toReturnSet.append(wormSet[i])
   
   return toReturnSet
-       
+
+#Calculates the average left and right intervals from a set of physical intervals       
 def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, filePath):
   lowerIntervalSums = 0
   upperIntervalSums = 0
@@ -218,13 +205,16 @@ def calculateAveragePhysicalIntervals(physIntervals, physLoc, chromNumber, fileP
 
   filePath.write(',%d,%d' % (lowerIntervalAverages, upperIntervalAverages))
 
+#Simulates a back crosses in which a particular base pair allele is held 
 def backCrossSimulation(physLoc, chromNumber, crossNumber, indNumber, bucketSize, numRandomSelect, numIter):
+  #Opens a file that contains info about the general statistics (percentage of genome, percentage of selected chromosome) of the cross simulation
   if os.path.isfile('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1)):
     g = open('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1), 'a')
   else:
     g = open('general_statistics_%d_%d.csv' % (physLoc, chromNumber + 1), 'wb')
     g.write('Number of Back Crosses,Individual Number,Selected Chromosome,Selected Base Pair,Percent Selected Chromosome,Percent Genome,Left Physical Loc,Right Physical Loc\n')
-
+  
+  #Opens a file that contains the info about the number of unique intervals  
   if os.path.isfile('buckets_%d_%d_%d_%d.csv' % (physLoc, chromNumber + 1, bucketSize, numRandomSelect)):
     h = open('buckets_%d_%d_%d_%d.csv' % (physLoc, chromNumber + 1, bucketSize, numRandomSelect), 'a')
   else:
@@ -281,14 +271,14 @@ class CrossThread (threading.Thread):
         print(self.threadID)
         backCrossSimulation(self.physLoc, self.chromNumber, self.numCrosses, self.numIndividuals, self.bucketSize)
 
-#Parameters: physLoc chromNumber numCrosses numIndividuals bucketSize numIter
+#Parameters: physLoc chromNumber numCrosses numIndividuals bucketSize numRandomSelect numIter
 if __name__ == '__main__':
-  physLoc = int(sys.argv[1])
+  physLoc = int(sys.argv[1]) #Physical location that must be held
   chromNumber = int(sys.argv[2]) - 1;
   numCrosses = int(sys.argv[3])
   numIndividuals = int(sys.argv[4])
   bucketSize = int(sys.argv[5])
   numRandomSelect = int(sys.argv[6])
   numIter = int(sys.argv[7])
-  #numThreads = int(sys.argv[11])
+  
   backCrossSimulation(physLoc, chromNumber, numCrosses, numIndividuals, bucketSize, numRandomSelect, numIter)
