@@ -53,6 +53,8 @@ def backCrossTillLimitDiploid(diploidASet, diploidB, physLoc, chromNumber, paren
     
   return generation
 
+def selfCrossTillLimit(diploidSet, physLoc, chromNumber, parent, limit):
+
 def roundRobinCrossTillLimitDiploid(diploidSet, physLoc, chromNumber, parent, limit):
   generation = []
   loc = Chromosome.getLoc(physLoc, chromNumber)
@@ -256,20 +258,6 @@ def backCrossSimulation(physLoc, chromNumber, crossNumber, indNumber, bucketSize
     writeGroupSegments(fileName, truncAparentSet)
 
   g.close()
-
-class CrossThread (threading.Thread):
-    def __init__(self, threadID, physLoc, chromNumber, numCrosses, numIndividuals, bucketSize):
-        threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.physLoc = physLoc
-        self.chromNumber = chromNumber
-        self.numCrosses = numCrosses;
-        self.numIndividuals = numIndividuals
-        self.bucketSize = bucketSize
-    
-    def run(self):
-        print(self.threadID)
-        backCrossSimulation(self.physLoc, self.chromNumber, self.numCrosses, self.numIndividuals, self.bucketSize)
 
 #Parameters: physLoc chromNumber numCrosses numIndividuals bucketSize numRandomSelect numIter
 if __name__ == '__main__':
