@@ -8,8 +8,6 @@ Simulates crosses among haploid individuals.  8 parent crosses with various cros
 Created by Joshua Shapiro on 2008-10-06.
 """
 from __future__ import division
-import sys
-import os
 import optparse
 
 
