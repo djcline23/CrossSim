@@ -12,12 +12,7 @@ from Individual import*
 from numpy import *
 from WormIndividual import *
 from WormUtils import *
-import itertools
-import operator
 import os.path
-import random
-import sys
-import thread
 import threading
 
 lock = threading.Lock();
