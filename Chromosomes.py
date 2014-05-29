@@ -9,7 +9,6 @@ from __future__ import division
 from numpy import *
 from WormUtils import *
 import itertools
-import operator
 
 def generateBreaksPoisson(cM = 200):
     breaks = random.uniform(size = random.poisson(cM/100.0))
