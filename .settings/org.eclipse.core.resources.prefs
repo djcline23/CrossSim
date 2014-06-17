@@ -6,3 +6,6 @@ encoding/CrossUtils.py=utf-8
 encoding/Crosses.py=utf-8
 encoding/GeneticMap.py=utf-8
 encoding/Individual.py=utf-8
+encoding/WormIndividual.py=utf-8
+encoding/WormUtils.py=utf-8
+encoding/run_scipt.py=utf-8
