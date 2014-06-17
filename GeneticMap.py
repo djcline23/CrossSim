@@ -6,8 +6,6 @@ GeneticMap.py
 Created by Joshua Shapiro on 2008-10-02.
 """
 from __future__ import division
-import sys
-import os
 
 class GeneticMap(object):
   """Defines a relationship between the physical and genetic maps for each marker position"""
