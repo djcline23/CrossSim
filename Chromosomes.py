@@ -152,7 +152,7 @@ class Chromosome(object):
       """gets the Parental identity for a given cM position"""
       if mapLoc < 0 or mapLoc > self.cM:
         raise ValueError, "Map location must be withing the range of the chromosome."
-      loc = cM/float(self.cM)
+      loc = self.cM/float(self.cM)
       return self.getParentAtLocation(loc)
       
     def getParentAtMapLocs(self, mapLocs):
